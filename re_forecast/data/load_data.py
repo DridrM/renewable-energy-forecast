@@ -1,4 +1,6 @@
 import requests
+from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_2, RESSOURCE_3, CONTENT_TYPE, CLIENT_SECRET
+from re_forecast.data.utils import handle_params
 
 
 def collect_rte_token(base_url: str,
@@ -55,4 +57,42 @@ def query_rte_api(token_infos: dict,
 # def get_prod_type()
 
 
-# def get_rte_data()
+def get_rte_data(ressource_nb: int,
+                 start_date = None,
+                 end_date = None,
+                 eic_code = None,
+                 prod_type = None,
+                 ressources_urls = {1: RESSOURCE_1,
+                                    2: RESSOURCE_2,
+                                    3: RESSOURCE_3}
+                 ) -> dict:
+    """Pack together the token collection, the params handling (including
+    hangling presence, time limits and formating) and the final RTE API query.
+    Notes:
+    - For the dates, please use this format: 'YYYY-MM-DDThh:mm:ss'
+    - For the eic code and the prod type, please refer to the dates (for now)
+    """
+
+    # Collect the rte access token
+    token_infos = collect_rte_token(BASE_URL,
+                                    RESSOURCE_AUTH,
+                                    CONTENT_TYPE,
+                                    CLIENT_SECRET)
+
+    # Set the ressource given the ressource number
+    ressource = ressources_urls[ressource_nb]
+
+    # Set the params given the ressource number
+    params = handle_params(ressource_nb,
+                           start_date,
+                           end_date,
+                           eic_code,
+                           prod_type)
+
+    # Query the RTE API with ressource number given
+    data = query_rte_api(token_infos,
+                         BASE_URL,
+                         ressource,
+                         params = params)
+
+    return data
