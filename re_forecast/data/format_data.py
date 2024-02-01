@@ -31,3 +31,7 @@ def extract_generation_units(json: dict,
             units_names.append({key_lvl_2: unit[key_lvl_2]})
 
     return units_names
+
+
+def extract_generation_values():
+    pass
