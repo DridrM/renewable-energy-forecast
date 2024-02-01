@@ -18,10 +18,10 @@ def handle_datetime_limits(start_date: str,
                            end_date: str,
                            ressource_nb: int,
                            dt_format = "%Y-%m-%d %H:%M:%S",
-                           ressource_time_delta = {1: 155, 2: 7, 3: 14},
+                           ressource_time_delta = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
                            start_date_limits = {1: datetime.datetime(2014, 12, 15),
                                                 2: datetime.datetime(2011, 12, 13),
-                                                3: datetime.datetime(2017, 1, 1)},
+                                                3: datetime.datetime(2017, 1, 1)}, # Same as above
                            end_date_limit = datetime.datetime.now()
                            ) -> dict:
     """Handle datetime limits and presence:
@@ -33,7 +33,7 @@ def handle_datetime_limits(start_date: str,
     - If the timedelta between end and start are more than the limit fixed for the ressource asked:
           The end date is set to that limit
     - Else, the function return a dict with start and end date to the right API format
-    Please respect the datetime format by default.
+    Please respect the following datetime format: 'YYYY-MM-DD hh:mm:ss'.
     """
 
     # If at least one of the dates is not provided:

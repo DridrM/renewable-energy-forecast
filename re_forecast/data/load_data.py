@@ -51,12 +51,6 @@ def query_rte_api(token_infos: dict,
     return response.json()
 
 
-# def get_eic_code()
-
-
-# def get_prod_type()
-
-
 def get_rte_data(ressource_nb: int,
                  start_date = None,
                  end_date = None,
