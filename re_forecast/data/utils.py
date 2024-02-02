@@ -111,7 +111,8 @@ def handle_params(ressource_nb: int,
                  start_date: str | None,
                  end_date: str | None,
                  eic_code: str | None,
-                 prod_type: str | None) -> dict:
+                 prod_type: str | None,
+                 prod_subtype: str | None) -> dict:
     """Pack together the datetime limits handling function and
     the params presence function.
     Return a dict of params with the right format for the RTE API call."""
@@ -127,6 +128,7 @@ def handle_params(ressource_nb: int,
     params = handle_params_presence(start_date = start_date,
                                     end_date = end_date,
                                     eic_code = eic_code,
-                                    prod_type = prod_type)
+                                    prod_type = prod_type,
+                                    prod_subtype = prod_subtype)
 
     return params

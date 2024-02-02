@@ -56,6 +56,7 @@ def get_rte_data(ressource_nb: int,
                  end_date = None,
                  eic_code = None,
                  prod_type = None,
+                 prod_subtype = None,
                  ressources_urls = {1: RESSOURCE_1,
                                     2: RESSOURCE_2,
                                     3: RESSOURCE_3}
@@ -81,7 +82,8 @@ def get_rte_data(ressource_nb: int,
                            start_date,
                            end_date,
                            eic_code,
-                           prod_type)
+                           prod_type,
+                           prod_subtype)
 
     # Query the RTE API with ressource number given
     data = query_rte_api(token_infos,
