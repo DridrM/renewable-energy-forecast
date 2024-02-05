@@ -55,7 +55,7 @@ def extract_generation_units(json: dict,
 
 def extract_generation_values(json: dict,
                               ressource_nb: int,
-                              unit_name: str,
+                              units_names: list, # List of units names
                               nomenclature_lvl_1 = {1: "actual_generations_per_production_type",
                                                     2: "actual_generations_per_unit",
                                                     3: "generation_mix_15min_time_scale"},
@@ -94,11 +94,18 @@ def extract_generation_values(json: dict,
 
         # Case if ressource number equal to 2
         # Append if the name of the unit correspond to unit_name
-        if ressource_nb == 2 and unit[key_lvl_2_units][key_lvl_3_units] == unit_name:
+        if ressource_nb == 2 and unit[key_lvl_2_units][key_lvl_3_units] in units_names:
             values = unit[key_lvl_2_values] # This is already a list
 
         # Case for ressources 1 and 3
-        if unit[key_lvl_2_units] == unit_name:
+        if unit[key_lvl_2_units] in units_names:
             values = unit[key_lvl_2_values]
 
     return values
+
+
+def extract_all_generation_values(json: dict,
+                                  ressources_nb: int,
+                                  ) -> list:
+    """Return the generation values for all units names"""
+    pass

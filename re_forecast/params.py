@@ -23,3 +23,14 @@ RESSOURCE_3 = os.environ.get("RESSOURCE_3")
 
 # Client secret for the data ressources query
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+
+
+################
+# Data storage #
+################
+
+# Path to store the CSVs of the energy production
+DATA_CSV_ENERGY_PRODUCTION_PATH = os.environ.get("DATA_CSV_ENERGY_PRODUCTION_PATH")
+
+# Path to store meteo predcion CSVs
+DATA_CSV_METEO_PATH = os.environ.get("DATA_CSV_METEO_PATH")
