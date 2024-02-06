@@ -24,9 +24,9 @@ def extract_generation_units(json: dict,
         # Extract the 'units' from the json
         units = json[key_lvl_1]
 
-    # In the case of the server return an error, show the error message
+    # In the case of the server return an error, show the error message and return the json
     except:
-        print("The server encounter an error when the function 'get_rte_data' call the API")
+        print("The server encounter an error when the function 'download_rte_data' call the API")
         return json
 
     # Instanciate empty list

@@ -8,16 +8,25 @@ def write_csv(data: list, csv_path: str) -> None:
     data: list of dicts
     path: path to file"""
 
-    # Create the csv and open it with context manager
-    with open(csv_path, mode = "w") as f:
-        # Create a writer object with the right field names
-        writer = csv.DictWriter(f, fieldnames = data[0].keys())
+    # Error handling when the API return an error
+    try:
+        # Create the csv and open it with context manager
+        with open(csv_path, mode = "w") as f:
+            # Create a writer object with the right field names
+            writer = csv.DictWriter(f, fieldnames = data[0].keys())
 
-        # Write the header
-        writer.writeheader()
+            # Write the header
+            writer.writeheader()
 
-        # Write the rows
-        writer.writerows(data)
+            # Write the rows
+            writer.writerows(data)
+
+    # In the case of the server return an error, show the error message and return the json
+    except:
+        print("The JSON return by the API is not at the right format, the API may encounter an issue")
+
+        # Delete the file created with the 'open' function
+        os.remove(csv_path)
 
 
 def create_csv_path(root_path: str,
@@ -53,7 +62,7 @@ def create_csv_path(root_path: str,
                 params_str += f"__{param}"
 
     # Concat the ressource name and the params_str into final csv_path
-    csv_path = f"{root_path}/{ressources_names[ressource_nb]}{params_str}"
+    csv_path = f"{root_path}/{ressources_names[ressource_nb]}{params_str}.csv"
 
     # Final check: replace " " by "_"
     csv_path = csv_path.replace(" ", "_")
@@ -75,12 +84,24 @@ def create_csv_path_units_names(root_path: str,
 
 
     # Concat the ressource name and the params_str into final csv_path
-    csv_path = f"{root_path}/{ressources_names[ressource_nb]}__{units_names[ressource_nb]}"
+    csv_path = f"{root_path}/{ressources_names[ressource_nb]}__{units_names[ressource_nb]}.csv"
 
     # Final check: replace " " by "_"
     csv_path = csv_path.replace(" ", "_")
 
     return csv_path
+
+
+def create_dir_if_not_exists(root_path: str) -> None:
+    """If the dir specified as 'root_path' does not exists,
+    create the dir, else do nothing"""
+
+    # Verify if the dir exists
+    if not os.path.isdir(root_path):
+        # If not, create it (use makedirs to create intermediary directories)
+        os.makedirs(root_path)
+
+    # Otherwise, the function return None
 
 
 def write_if_not_exists(data: list, csv_path: str) -> None:
@@ -119,6 +140,9 @@ def store_to_csv(data: list,
         csv_path = create_csv_path_units_names(root_path,
                                                ressource_nb)
 
+        # Create root dir if not exists
+        create_dir_if_not_exists(root_path)
+
         # Write the csv if it doesn't exists
         write_if_not_exists(data, csv_path)
 
@@ -132,6 +156,9 @@ def store_to_csv(data: list,
                                 eic_code = eic_code,
                                 prod_type = prod_type,
                                 prod_subtype = prod_subtype)
+
+        # Create root dir if not exists
+        create_dir_if_not_exists(root_path)
 
         # Again, write the csv if it doesn't exists already
         write_if_not_exists(data, csv_path)
