@@ -24,6 +24,8 @@ def write_csv(data: list, csv_path: str) -> None:
     # In the case of the server return an error, show the error message and return the json
     except:
         print("The JSON return by the API is not at the right format, the API may encounter an issue")
+        # In this case 'data' should be a dict containing an error message
+        print(data)
 
         # Delete the file created with the 'open' function
         os.remove(csv_path)
