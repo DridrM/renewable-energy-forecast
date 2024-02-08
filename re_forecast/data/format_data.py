@@ -87,10 +87,13 @@ def extract_generation_values(json: dict,
 
     # In the case of the server return an error, show the error message
     except:
-        print("The server encounter an error when the function 'get_rte_data' call the API")
+        print("The server encounter an error when the function 'download_rte_data' call the API")
+
         # In this case 'json' should be a dict containing an error message
         print(json)
-        return json
+
+        # Stop the function here
+        return
 
     # Iterate over the units
     for unit in units:
@@ -106,11 +109,6 @@ def extract_generation_values(json: dict,
         if unit[key_lvl_2_units] == unit_name:
             # Return the list of the generation values per hour
             return unit[key_lvl_2_values]
-
-
-# def extract_one_generation_value(json: dict,
-#                                  ressource_nb: int,
-#                                  )
 
 
 def extract_all_generation_values(json: dict,
@@ -131,7 +129,7 @@ def extract_all_generation_values(json: dict,
 
         # Error handling: if type return is dict, the API call encounter an error
         # Print an error message and show the dict containing the error message
-        if isinstance(generation_values, dict):
+        if not isinstance(generation_values, list):
             print("The JSON return by the API is not at the right format, the API may encounter an issue")
             print(generation_values)
 

@@ -1,6 +1,11 @@
 import datetime
 
 
+#######################################
+# API calls function: params handling #
+#######################################
+
+
 def handle_params_presence(**params) -> tuple | None:
     """Return the tuple of params without 'None'
     if there is at least one provided, else return None"""
@@ -132,3 +137,20 @@ def handle_params(ressource_nb: int,
                                     prod_subtype = prod_subtype)
 
     return params
+
+
+###############################################
+# Data management functions: storage handling #
+###############################################
+
+
+# def create_register()
+
+
+# def fill_register()
+
+
+# def delete_generation_data()
+
+
+# def delete_units_names()

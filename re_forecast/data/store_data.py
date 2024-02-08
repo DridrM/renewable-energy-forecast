@@ -136,31 +136,39 @@ def store_to_csv(data: list,
     If you set 'store_units_names' to true, the function will create
     a special path name to store the list of units names."""
 
-    # Case we want to store units names list
-    if store_units_names:
-        # Create the csv path
-        csv_path = create_csv_path_units_names(root_path,
-                                               ressource_nb)
+    # Error handling: assure that data is a list
+    if isinstance(data, list):
 
-        # Create root dir if not exists
-        create_dir_if_not_exists(root_path)
+        # Case we want to store units names list
+        if store_units_names:
+            # Create the csv path
+            csv_path = create_csv_path_units_names(root_path,
+                                                ressource_nb)
 
-        # Write the csv if it doesn't exists
-        write_if_not_exists(data, csv_path)
+            # Create root dir if not exists
+            create_dir_if_not_exists(root_path)
 
-    # General case: we want to store format data from the API
+            # Write the csv if it doesn't exists
+            write_if_not_exists(data, csv_path)
+
+        # General case: we want to store format data from the API
+        else:
+            # Create the csv path
+            csv_path = create_csv_path(root_path,
+                                    ressource_nb,
+                                    start_date = start_date,
+                                    end_date = end_date,
+                                    eic_code = eic_code,
+                                    prod_type = prod_type,
+                                    prod_subtype = prod_subtype)
+
+            # Create root dir if not exists
+            create_dir_if_not_exists(root_path)
+
+            # Again, write the csv if it doesn't exists already
+            write_if_not_exists(data, csv_path)
+
+    # Case this isn't a list: the function format_data probably return 'None'
     else:
-        # Create the csv path
-        csv_path = create_csv_path(root_path,
-                                ressource_nb,
-                                start_date = start_date,
-                                end_date = end_date,
-                                eic_code = eic_code,
-                                prod_type = prod_type,
-                                prod_subtype = prod_subtype)
-
-        # Create root dir if not exists
-        create_dir_if_not_exists(root_path)
-
-        # Again, write the csv if it doesn't exists already
-        write_if_not_exists(data, csv_path)
+        print("The function format_data malfuncitoned, due to a problem in the API call")
+        print(data)
