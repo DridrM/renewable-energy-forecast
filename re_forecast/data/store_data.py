@@ -2,6 +2,7 @@ import datetime
 import csv
 import os
 
+from re_forecast.data.utils import handle_params_storage
 
 def write_csv(data: list, csv_path: str) -> None:
     """Write csv with the function csv.Dictwriter
@@ -33,10 +34,15 @@ def write_csv(data: list, csv_path: str) -> None:
 
 def create_csv_path(root_path: str,
                     ressource_nb: int,
+                    start_date: str | None,
+                    end_date: str | None,
+                    eic_code: str | None,
+                    prod_type: str | None,
+                    prod_subtype: str | None,
                     ressources_names = {1: "actual_generations_per_production_type",
                                         2: "actual_generations_per_unit",
                                         3: "generation_mix_15min_time_scale"},
-                    **params: str,
+                    return_csv_name = False
                     ) -> str:
     """Create a csv path by adding the root path, the ressource name based on
     the ressource number you choose and the params one after the other"""
@@ -44,24 +50,21 @@ def create_csv_path(root_path: str,
     # Create empty string to store params strings
     params_str = ""
 
-    # Case all params are None, this is a default API call with the values of today, and all units
-    if not any(params.values()):
-        # Indicate date if no value: API return values for today
-        date = datetime.datetime.now()
-        date_str = f"{date.year}-{date.month}-{date.day} {date.hour}:00:00"
+    # Construct the dict of params with the handle_params_storage function
+    params = handle_params_storage(ressource_nb,
+                                   start_date,
+                                   end_date,
+                                   eic_code,
+                                   prod_type,
+                                   prod_subtype)
 
-        # Indicate all units are included
-        units_str = "all-units"
+    # Iterate over the params dict to fill the params string
+    for param in params.values():
+        params_str += f"__{param}"
 
-        # Append to params_str
-        params_str += f"__{date_str}__{units_str}"
-
-    else:
-        # Handle the params
-        for param in params.values():
-            # If the param is not None, add to params_str
-            if param:
-                params_str += f"__{param}"
+    # If the param return_csv_name is true, just return the params_str
+    if return_csv_name:
+        return params_str
 
     # Concat the ressource name and the params_str into final csv_path
     csv_path = f"{root_path}/{ressources_names[ressource_nb]}{params_str}.csv"
@@ -124,11 +127,11 @@ def write_if_not_exists(data: list, csv_path: str) -> None:
 def store_to_csv(data: list,
                  root_path: str,
                  ressource_nb: int,
-                 start_date: str,
-                 end_date: str,
-                 eic_code: str,
-                 prod_type: str,
-                 prod_subtype: str,
+                 start_date: str | None,
+                 end_date: str | None,
+                 eic_code: str | None,
+                 prod_type: str | None,
+                 prod_subtype: str | None,
                  store_units_names = False
                  ) -> None:
     """Store the format data into a csv, using the create_csv_path
@@ -155,12 +158,12 @@ def store_to_csv(data: list,
         else:
             # Create the csv path
             csv_path = create_csv_path(root_path,
-                                    ressource_nb,
-                                    start_date = start_date,
-                                    end_date = end_date,
-                                    eic_code = eic_code,
-                                    prod_type = prod_type,
-                                    prod_subtype = prod_subtype)
+                                       ressource_nb,
+                                       start_date,
+                                       end_date,
+                                       eic_code,
+                                       prod_type,
+                                       prod_subtype)
 
             # Create root dir if not exists
             create_dir_if_not_exists(root_path)

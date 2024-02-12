@@ -32,5 +32,9 @@ CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 # Path to store the CSVs of the energy production
 DATA_CSV_ENERGY_PRODUCTION_PATH = os.environ.get("DATA_CSV_ENERGY_PRODUCTION_PATH")
 
+# Path to the register for energy production data
+DATA_ENERGY_PRODUCTION_REGISTER = f"{DATA_CSV_ENERGY_PRODUCTION_PATH}/energy_production_register.csv"
+
+
 # Path to store meteo predcion CSVs
 DATA_CSV_METEO_PATH = os.environ.get("DATA_CSV_METEO_PATH")
