@@ -64,7 +64,7 @@ def download_rte_data(ressource_nb: int,
     """Pack together the token collection, the params handling (including
     hangling presence, time limits and formating) and the final RTE API query.
     Notes:
-    - For the dates, please use this format: 'YYYY-MM-DDThh:mm:ss'
+    - For the dates, please use this format: 'YYYY-MM-DD hh:mm:ss'
     - For the eic code and the prod type, please refer to the dates (for now)
     """
 

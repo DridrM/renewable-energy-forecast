@@ -55,11 +55,15 @@ def handle_datetime_limits(start_date: str,
 
     # Test if the start_date and the end_date does not exceed the limit dates
     if (start_date_dt < start_date_limit) or (end_date_dt > end_date_limit):
+        # Warning message
+        print("Start date & end date exceeds limits dates, default API call will be made")
         # Return a dict with start and end date as 'None'
         return {'start_date': None, 'end_date': None}
 
     # Test if end_date is not superior to start_date
     if not end_date_dt > start_date_dt:
+        # Warning message
+        print("End date is before the start date, default API call will be made")
         # Return a dict with start and end date as 'None'
         return {'start_date': None, 'end_date': None}
 
@@ -69,8 +73,11 @@ def handle_datetime_limits(start_date: str,
 
     # If the start date and the end date are more than x days appart
     if (end_date_dt - start_date_dt).days > x:
-        # Create a new end date 155 days after start date
+        # Create a new end date x days after start date
         end_date_dt_new = start_date_dt + datetime.timedelta(days = x)
+
+        # Warning message
+        print(f"End date is more than {x} days after the start date, end date will be reset to respect the limit")
 
         # Format the dates to API format and return the dates
         return {"start_date": date_api_format(start_date_dt),
