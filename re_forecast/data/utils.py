@@ -202,12 +202,15 @@ def create_csv_path(root_path: str,
     for param in params.values():
         params_str += f"__{param}"
 
+    # Create the csv_name str
+    csv_name = f"{ressources_names[ressource_nb]}{params_str}.csv"
+
     # If the param return_csv_name is true, just return the params_str
     if return_csv_name:
-        return params_str
+        return csv_name
 
     # Concat the ressource name and the params_str into final csv_path
-    csv_path = f"{root_path}/{ressources_names[ressource_nb]}{params_str}.csv"
+    csv_path = f"{root_path}/{csv_name}"
 
     # Final check: replace " " by "_"
     csv_path = csv_path.replace(" ", "_")
@@ -424,19 +427,35 @@ def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER,
 
 def delete_generation_data(*hash_id: int,
                            register_path = DATA_ENERGY_PRODUCTION_REGISTER,
-                           root_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
+                           root_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
+                           metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
                            ) -> None:
-    """"""
+    """Remove the generation data csvs among the specified hash_id corresponding
+    to these csvs. Remove the lines corresponding to these files in the
+    register accordingly."""
 
     # Open the register
     register = pd.read_csv(register_path)
 
     # Iterate over the hash_id tuple
     for hash in hash_id:
-        # Delete the generation csv file given the hash_id, by reading the
-        # corresponding csv file name
-        pass
+        # Read the csv name
+        hash_col = metadata_fields[1]
+        csv_name_col = metadata_fields[9]
+        csv_name = register.loc[register[hash_col] == hash, csv_name_col]
 
+        # Contruct the csv path and delete the file
+        csv_path = f"{root_data_path}/{csv_name}"
+
+        # Delete the csv file
+        os.remove(csv_path)
+
+    # Delete the lines in the register df in one time
+    indexes = register.loc[register.loc[hash_col].isin(hash_id), :].index
+    new_register = register.drop(indexes)
+
+    # Save the new register, overwrite the old register csv
+    new_register.to_csv(register_path)
 
 
 # def delete_units_names()
