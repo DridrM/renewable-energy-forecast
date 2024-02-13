@@ -2,7 +2,7 @@ import datetime
 import csv
 import os
 
-from re_forecast.data.utils import handle_params_storage
+from re_forecast.data.utils import fill_register, create_csv_path
 
 def write_csv(data: list, csv_path: str) -> None:
     """Write csv with the function csv.Dictwriter
@@ -30,49 +30,6 @@ def write_csv(data: list, csv_path: str) -> None:
 
         # Delete the file created with the 'open' function
         os.remove(csv_path)
-
-
-def create_csv_path(root_path: str,
-                    ressource_nb: int,
-                    start_date: str | None,
-                    end_date: str | None,
-                    eic_code: str | None,
-                    prod_type: str | None,
-                    prod_subtype: str | None,
-                    ressources_names = {1: "actual_generations_per_production_type",
-                                        2: "actual_generations_per_unit",
-                                        3: "generation_mix_15min_time_scale"},
-                    return_csv_name = False
-                    ) -> str:
-    """Create a csv path by adding the root path, the ressource name based on
-    the ressource number you choose and the params one after the other"""
-
-    # Create empty string to store params strings
-    params_str = ""
-
-    # Construct the dict of params with the handle_params_storage function
-    params = handle_params_storage(ressource_nb,
-                                   start_date,
-                                   end_date,
-                                   eic_code,
-                                   prod_type,
-                                   prod_subtype)
-
-    # Iterate over the params dict to fill the params string
-    for param in params.values():
-        params_str += f"__{param}"
-
-    # If the param return_csv_name is true, just return the params_str
-    if return_csv_name:
-        return params_str
-
-    # Concat the ressource name and the params_str into final csv_path
-    csv_path = f"{root_path}/{ressources_names[ressource_nb]}{params_str}.csv"
-
-    # Final check: replace " " by "_"
-    csv_path = csv_path.replace(" ", "_")
-
-    return csv_path
 
 
 def create_csv_path_units_names(root_path: str,
@@ -144,18 +101,22 @@ def store_to_csv(data: list,
 
         # Case we want to store units names list
         if store_units_names:
+            # First create root dir if not exists
+            create_dir_if_not_exists(root_path)
+
+            # Note: unlike for generation values, there is no register for units names
             # Create the csv path
             csv_path = create_csv_path_units_names(root_path,
                                                 ressource_nb)
-
-            # Create root dir if not exists
-            create_dir_if_not_exists(root_path)
 
             # Write the csv if it doesn't exists
             write_if_not_exists(data, csv_path)
 
         # General case: we want to store format data from the API
         else:
+            # First create root dir if not exists
+            create_dir_if_not_exists(root_path)
+
             # Create the csv path
             csv_path = create_csv_path(root_path,
                                        ressource_nb,
@@ -165,8 +126,13 @@ def store_to_csv(data: list,
                                        prod_type,
                                        prod_subtype)
 
-            # Create root dir if not exists
-            create_dir_if_not_exists(root_path)
+            # Fill the register
+            fill_register(ressource_nb,
+                          start_date,
+                          end_date,
+                          eic_code,
+                          prod_type,
+                          prod_subtype)
 
             # Again, write the csv if it doesn't exists already
             write_if_not_exists(data, csv_path)
