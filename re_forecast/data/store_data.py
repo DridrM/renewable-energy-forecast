@@ -2,7 +2,8 @@ import datetime
 import csv
 import os
 
-from re_forecast.data.utils import fill_register, create_csv_path
+from re_forecast.data.utils import create_csv_path, create_csv_path_units_names
+from re_forecast.data.manage_data_storage import fill_register
 
 def write_csv(data: list, csv_path: str) -> None:
     """Write csv with the function csv.Dictwriter
@@ -30,28 +31,6 @@ def write_csv(data: list, csv_path: str) -> None:
 
         # Delete the file created with the 'open' function
         os.remove(csv_path)
-
-
-def create_csv_path_units_names(root_path: str,
-                                ressource_nb: int,
-                                ressources_names = {1: "actual_generations_per_production_type",
-                                                    2: "actual_generations_per_unit",
-                                                    3: "generation_mix_15min_time_scale"},
-                                units_names = {1: "production_type",
-                                               2: "unit",
-                                               3: "production_type_&_subtype"}
-                                ) -> str:
-    """Create a csv path specifically for the lists of units names,
-    depending on the ressource you have called."""
-
-
-    # Concat the ressource name and the params_str into final csv_path
-    csv_path = f"{root_path}/{ressources_names[ressource_nb]}__{units_names[ressource_nb]}.csv"
-
-    # Final check: replace " " by "_"
-    csv_path = csv_path.replace(" ", "_")
-
-    return csv_path
 
 
 def create_dir_if_not_exists(root_path: str) -> None:

@@ -1,9 +1,4 @@
 import datetime
-import csv
-import os
-import pandas as pd
-
-from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PRODUCTION_REGISTER, METADATA_ENERGY_PRODUCTION_FIELDS
 
 
 ####################################################
@@ -17,7 +12,7 @@ def handle_params_presence(**params) -> dict | None:
 
     # If at least one of the params is not None:
     if any(params.values()):
-        # Return the tuple without 'None'
+        # Return the dict without 'None'
         return {key: value for (key, value) in params.items() if value}
 
     # Else return None
@@ -200,7 +195,9 @@ def create_csv_path(root_path: str,
 
     # Iterate over the params dict to fill the params string
     for param in params.values():
-        params_str += f"__{param}"
+        # Append only if not None
+        if param:
+            params_str += f"__{param}"
 
     # Create the csv_name str
     csv_name = f"{ressources_names[ressource_nb]}{params_str}.csv"
@@ -211,6 +208,28 @@ def create_csv_path(root_path: str,
 
     # Concat the ressource name and the params_str into final csv_path
     csv_path = f"{root_path}/{csv_name}"
+
+    # Final check: replace " " by "_"
+    csv_path = csv_path.replace(" ", "_")
+
+    return csv_path
+
+
+def create_csv_path_units_names(root_path: str,
+                                ressource_nb: int,
+                                ressources_names = {1: "actual_generations_per_production_type",
+                                                    2: "actual_generations_per_unit",
+                                                    3: "generation_mix_15min_time_scale"},
+                                units_names = {1: "production_type",
+                                               2: "unit",
+                                               3: "production_type_&_subtype"}
+                                ) -> str:
+    """Create a csv path specifically for the lists of units names,
+    depending on the ressource you have called."""
+
+
+    # Concat the ressource name and the params_str into final csv_path
+    csv_path = f"{root_path}/{ressources_names[ressource_nb]}__{units_names[ressource_nb]}.csv"
 
     # Final check: replace " " by "_"
     csv_path = csv_path.replace(" ", "_")
@@ -247,6 +266,10 @@ def handle_params_storage(ressource_nb: int,
     - When one unit name is given (the one corresponding to the ressource called): the unit name is affected to
         the right key in the params dict returned"""
 
+    # Reset storage_params at each call of the function
+    # as the previous value for 'storage_params' remain in the function's name space
+    storage_params_cp = storage_params.copy()
+
     # Handle start date and end date
     dates = handle_datetime_limits(start_date,
                                    end_date,
@@ -280,8 +303,8 @@ def handle_params_storage(ressource_nb: int,
                                          prod_subtype = prod_subtype)
 
     # We first update the storage params dict with the start date and the end date
-    storage_params["start_date"] = start_date
-    storage_params["end_date"] = end_date
+    storage_params_cp["start_date"] = start_date
+    storage_params_cp["end_date"] = end_date
 
     # Choose the right column to put in the unit name
     col = units_names_cols[ressource_nb]
@@ -289,173 +312,14 @@ def handle_params_storage(ressource_nb: int,
     # If units_names is 'None', this is a default API call and all the gen values
     # for all the units are returned
     if not units_names:
-        storage_params[col] = "all-units"
+        storage_params_cp[col] = "all-units"
 
-        return storage_params
+        return storage_params_cp
 
     # Else return the storage_params dict with the unit name filled in the right column
     match ressource_nb:
-        case 1: storage_params[col] = prod_type
-        case 2: storage_params[col] = eic_code
-        case 3: storage_params[col] = prod_subtype
+        case 1: storage_params_cp[col] = prod_type
+        case 2: storage_params_cp[col] = eic_code
+        case 3: storage_params_cp[col] = prod_subtype
 
-    return storage_params
-
-
-def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
-                    register_path = DATA_ENERGY_PRODUCTION_REGISTER
-                    ) -> None:
-    """Create a csv register to track generation data presence and infos.
-    The register is saved at the same path as the data papth 'root_path'
-    The infos are:
-    - Date of creation of any generation data csv
-    - The API ressource called
-    - The params of the API call corresponding to a given generation data csv"""
-
-    # If the register already exists, just print a warning message and return
-    if not os.path.isfile(register_path):
-        print("The register already exists")
-
-        return
-
-    # Create the csv and his header
-    with open(register_path, mode = "w") as f:
-        writer = csv.DictWriter(f, fieldnames = fields.values())
-
-        writer.writeheader()
-
-
-def create_metadata_row(ressource_nb: int,
-                        start_date: str | None,
-                        end_date: str | None,
-                        eic_code: str | None,
-                        prod_type: str | None,
-                        prod_subtype: str | None,
-                        ressources_names = {1: "actual_generations_per_production_type",
-                                            2: "actual_generations_per_unit",
-                                            3: "generation_mix_15min_time_scale"},
-                        metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
-                        ) -> dict:
-    """Create the metadata row to append to the register each time a new generation
-    dataset is downloaded from the API."""
-
-    # Create the params for storage metadata
-    storage_params = handle_params_storage(ressource_nb,
-                                           start_date,
-                                           end_date,
-                                           eic_code,
-                                           prod_type,
-                                           prod_subtype)
-
-    # Pick the names of the fields to append to the 'storage_params' dict
-    # in the metadata fields general parameter
-    hash_key = metadata_fields[1]
-    creation_date_key = metadata_fields[2]
-    ressource_key = metadata_fields[3]
-    csv_name_key = metadata_fields[9]
-
-    # Append to the row the creation date
-    now_dt = datetime.datetime.now()
-    now_str = format_dates(now_dt, for_storage = True)
-    storage_params[creation_date_key] = now_str
-
-    # Append to the row the ressource name
-    storage_params[ressource_key] = ressources_names[ressource_nb]
-
-    # Append to the row the csv file name
-    csv_name = create_csv_path(ressource_nb,
-                               start_date,
-                               end_date,
-                               eic_code,
-                               prod_type,
-                               prod_subtype,
-                               return_csv_name = True)
-    storage_params[csv_name_key] = csv_name
-
-    # Create a hash with the csv name and the curent date, and fill the hash_id field
-    hash_base = f"{now_str}{csv_name}"
-    storage_params[hash_key] = hash(hash_base)
-
-    return storage_params
-
-
-def fill_register(ressource_nb: int,
-                  start_date: str | None,
-                  end_date: str | None,
-                  eic_code: str | None,
-                  prod_type: str | None,
-                  prod_subtype: str | None,
-                  register_path = DATA_ENERGY_PRODUCTION_REGISTER
-                  ) -> None:
-    """Fill the register with data generation date, file name, ressource called
-    name, unique hash id and params values."""
-
-    # Use the create register function to create the register if it not already exists
-    create_register()
-
-    # Create the row to append to the register
-    row = create_metadata_row(ressource_nb,
-                              start_date,
-                              end_date,
-                              eic_code,
-                              prod_type,
-                              prod_subtype)
-
-    # Append a new line to the register
-    with open(register_path, mode = 'a') as f:
-        writer = csv.DictWriter(f)
-
-        writer.writerow(row)
-
-
-def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER,
-                  return_register = False
-                  ) -> None | pd.DataFrame:
-    """Print the register in any cases. If return_register is set to True,
-    the register is returned."""
-
-    # Load the register
-    register = pd.read_csv(register_path)
-
-    # Show the register
-    print(register)
-
-    # Return the register if specified
-    if return_register:
-        return register
-
-
-def delete_generation_data(*hash_id: int,
-                           register_path = DATA_ENERGY_PRODUCTION_REGISTER,
-                           root_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
-                           metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
-                           ) -> None:
-    """Remove the generation data csvs among the specified hash_id corresponding
-    to these csvs. Remove the lines corresponding to these files in the
-    register accordingly."""
-
-    # Open the register
-    register = pd.read_csv(register_path)
-
-    # Iterate over the hash_id tuple
-    for hash in hash_id:
-        # Read the csv name
-        hash_col = metadata_fields[1]
-        csv_name_col = metadata_fields[9]
-        csv_name = register.loc[register[hash_col] == hash, csv_name_col]
-
-        # Contruct the csv path and delete the file
-        csv_path = f"{root_data_path}/{csv_name}"
-
-        # Delete the csv file
-        os.remove(csv_path)
-
-    # Delete the lines in the register df in one time
-    indexes = register.loc[register.loc[hash_col].isin(hash_id), :].index
-    new_register = register.drop(indexes)
-
-    # Save the new register, overwrite the old register csv
-    new_register.to_csv(register_path)
-
-
-# def delete_units_names()
+    return storage_params_cp
