@@ -1,4 +1,5 @@
 import datetime
+import time
 
 
 ####################################################
@@ -323,3 +324,41 @@ def handle_params_storage(ressource_nb: int,
         case 3: storage_params_cp[col] = prod_subtype
 
     return storage_params_cp
+
+
+#############################################################
+# Get data functions: functions used in the get data module #
+#############################################################
+
+
+def delay(func,
+          minimal_call_timedelta = 10, # In seconds
+          calls = list()
+          ):
+    """Decorator that block the execution of a function
+    before a given delay"""
+    def wrapper(*args) -> any:
+        """The wrapper return the function when two consecutive function call
+        are more than x seconds appart, with x a defined timedelta"""
+
+        # We append the call time to calls list
+        calls.append(time.time())
+
+        # The function is return at the first call
+        if len(calls) <= 1:
+
+            return func(*args)
+
+        # The function is not return when the timedelta between two following
+        # calls is less than the minimal timedelta. An error message is printed.
+        elif calls[-1] - calls[-2] < minimal_call_timedelta:
+            print(f"You cannot make two following {func.__name__} calls less than {minimal_call_timedelta}s appart.")
+
+            return
+
+        # In all other cases, the function is returned.
+        else:
+
+            return func(*args)
+
+    return wrapper
