@@ -163,6 +163,12 @@ def handle_params(ressource_nb: int,
     return params
 
 
+def slice_dates(start_date: str,
+                end_date: str
+                ) -> list:
+    """"""
+
+
 ###############################################
 # Data management functions: storage handling #
 ###############################################
@@ -331,23 +337,30 @@ def handle_params_storage(ressource_nb: int,
 #############################################################
 
 
-def delay(func,
-          minimal_call_timedelta = 10, # In seconds
-          calls = list()
-          ):
-    """Decorator that block the execution of a function
+def api_delay(func,
+              minimal_call_timedeltas = {1: 900,
+                                         2: 3600,
+                                         3: 900},
+              ressource_key = "ressource_nb",
+              calls = list()
+              ):
+    """Decorator that block the execution of a API related function
     before a given delay"""
-    def wrapper(*args) -> any:
+    def wrapper(**kwargs) -> any:
         """The wrapper return the function when two consecutive function call
         are more than x seconds appart, with x a defined timedelta"""
 
         # We append the call time to calls list
         calls.append(time.time())
 
+        # Set the right minimal timedelta depending on the ressource
+        ressource = kwargs[ressource_key]
+        minimal_call_timedelta = minimal_call_timedeltas[ressource]
+
         # The function is return at the first call
         if len(calls) <= 1:
 
-            return func(*args)
+            return func(**kwargs)
 
         # The function is not return when the timedelta between two following
         # calls is less than the minimal timedelta. An error message is printed.
@@ -359,6 +372,6 @@ def delay(func,
         # In all other cases, the function is returned.
         else:
 
-            return func(*args)
+            return func(**kwargs)
 
     return wrapper
