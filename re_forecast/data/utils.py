@@ -23,12 +23,11 @@ def handle_params_presence(**params) -> dict | None:
 def handle_datetime_limits(start_date: str,
                            end_date: str,
                            ressource_nb: int,
-                           for_storage: bool,
+                           format_dates_mode: int,
                            dt_format = "%Y-%m-%d %H:%M:%S",
-                           ressource_time_delta = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
                            start_date_limits = {1: datetime.datetime(2014, 12, 15),
                                                 2: datetime.datetime(2011, 12, 13),
-                                                3: datetime.datetime(2017, 1, 1)}, # Same as above
+                                                3: datetime.datetime(2017, 1, 1)}, # According to RTE API doc
                            end_date_limit = datetime.datetime.now()
                            ) -> dict:
     """Handle datetime limits and presence:
@@ -71,6 +70,10 @@ def handle_datetime_limits(start_date: str,
         # Return a dict with start and end date as 'None'
         return {'start_date': None, 'end_date': None}
 
+    """
+    This is archive code. It is no more needed as the slice_dates function solve the problem of
+    the limits of days we can call for each ressource
+
     # Else, handle these three cases coresponding to the three ressources
     # x is the number of days separating start and end date depending on the ressource we call
     x = ressource_time_delta[ressource_nb]
@@ -84,12 +87,13 @@ def handle_datetime_limits(start_date: str,
         print(f"End date is more than {x} days after the start date, end date will be reset to respect the limit")
 
         # Format the dates to API format and return the dates
-        return {"start_date": format_dates(start_date_dt, for_storage),
-                "end_date": format_dates(end_date_dt_new, for_storage)}
+        return {"start_date": format_dates(start_date_dt, format_dates_mode),
+                "end_date": format_dates(end_date_dt_new, format_dates_mode)}
+    """
 
     # Format the dates to API format and return the dates
-    return {"start_date": format_dates(start_date_dt, for_storage),
-            "end_date": format_dates(end_date_dt, for_storage)}
+    return {"start_date": format_dates(start_date_dt, format_dates_mode),
+            "end_date": format_dates(end_date_dt, format_dates_mode)}
 
 
 def format_time_values(t: int) -> str:
@@ -106,14 +110,19 @@ def format_time_values(t: int) -> str:
 
 
 def format_dates(date: datetime.datetime,
-                 for_storage = False,
-                 delimiters = {False: {"date_time": "T", "tz": "+01:00"},
-                               True: {"date_time": "_", "tz": ""}}
+                 mode = 0,
+                 delimiters = {0: {"date_time": "T", "tz": "+01:00"},
+                               1: {"date_time": "_", "tz": ""},
+                               2: {"date_time": " ", "tz": ""}}
                  ) -> str:
     """Transform a datetime object into a string, with the right
     format accepted by RTE API.
     If the param 'storage' is set to true, the function return the date at the right
-    format for the name of csv files used to store generation data"""
+    format for the name of csv files used to store generation data
+    Mode correspond to the format mode:
+    - 0: Format the date for the RTE API call
+    - 1: Format the date for the store data names
+    - 2: Format the date for the slice_dates function"""
 
     # /!\ Option: Handle winter and summer time zones in France
 
@@ -126,8 +135,8 @@ def format_dates(date: datetime.datetime,
     second = format_time_values(date.second)
 
     # Set the right delimiters if the dates are for the names of stored datas or not
-    date_time_delimiter = delimiters[for_storage]["date_time"]
-    tz_delimiter = delimiters[for_storage]["tz"]
+    date_time_delimiter = delimiters[mode]["date_time"]
+    tz_delimiter = delimiters[mode]["tz"]
 
     # Return API format by extracting time params
     return f"{year}-{month}-{day}{date_time_delimiter}{hour}:{minute}:{second}{tz_delimiter}"
@@ -147,7 +156,7 @@ def handle_params(ressource_nb: int,
     dates = handle_datetime_limits(start_date,
                                    end_date,
                                    ressource_nb,
-                                   for_storage = False)
+                                   format_dates_mode = 0)
 
     # Extract start and end date
     start_date = dates["start_date"]
@@ -163,10 +172,108 @@ def handle_params(ressource_nb: int,
     return params
 
 
-def slice_dates(start_date: str,
-                end_date: str
+def slice_dates(ressource_nb: int,
+                start_date: str | None,
+                end_date: str | None,
+                dt_format = "%Y-%m-%d %H:%M:%S",
+                ressource_time_delta = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
+                ressource_datapoint_timedelta = {1: datetime.timedelta(hours = 1),
+                                                 2: datetime.timedelta(hours = 1),
+                                                 3: datetime.timedelta(minutes = 15)}
                 ) -> list:
-    """"""
+    """Transform a time range defined by two dates by a list of sub-ranges, in order
+    to respect the limit timedelta ranges asked from the API."""
+
+    # We set the data point timedelta corresponding to the ressource called
+    datapoint_timedelta = ressource_datapoint_timedelta[ressource_nb]
+
+    # Set the timedelta _limit depending on the ressource called
+    timedelta_limit = ressource_time_delta[ressource_nb]
+
+    # Here, we have to handle the dates consistency
+    dates = handle_datetime_limits(start_date,
+                                   end_date,
+                                   ressource_nb,
+                                   format_dates_mode = 2)
+
+    # If the dates are 'None', we already know that is a default API call
+    # and we can return 'dates' directly
+    if not all(dates.values()):
+        return dates
+
+    # Extract the dates from dates
+    start_date_str = dates["start_date"]
+    end_date_str = dates["end_date"]
+
+    start_date_dt = datetime.datetime.strptime(start_date_str, dt_format)
+    end_date_dt = datetime.datetime.strptime(end_date_str, dt_format)
+
+    # Compute the timedelta between end and start date
+    timedelta = end_date_dt - start_date_dt
+
+    # Divide the timedelta number of times that the timedelta limit fits in the
+    # time range (interval_nb)
+    intervals_nb = timedelta.days // timedelta_limit
+
+    # Transform timedelta_limit in datetime timedelta object
+    timedelta_limit_dt = datetime.timedelta(days = timedelta_limit)
+
+    # Create the timeranges list
+    timeranges = list()
+
+    # Iterate over the intervals_nb to create the time subranges if the interval_nb is more than 0
+    if intervals_nb >= 1:
+        for interval in range(intervals_nb):
+            # Create a subrange dict
+            subrange = dict()
+
+            # Create the start_date and the end_date of this time range
+            start_date_dt_sub = start_date_dt + interval * timedelta_limit_dt
+            end_date_dt_sub = start_date_dt + (interval + 1) * timedelta_limit_dt
+
+            # Fill the subrange dict
+            # If the second sub start_date is filled, it is shifted so that there is no
+            # overlaping point in the dataset downloaded via the API
+            if interval >= 1:
+                subrange["start_date"] = start_date_dt_sub + datapoint_timedelta
+
+            # If this is the first start date, there is no shift
+            else:
+                subrange["start_date"] = start_date_dt_sub
+
+            subrange["end_date"] = end_date_dt_sub
+
+            # Add the subrange dict to the timeranges list
+            timeranges.append(subrange)
+
+        # Append the remaining time range
+        remaining_start_date_dt = timeranges[-1]["end_date"] + datapoint_timedelta
+        timeranges.append({"start_date": remaining_start_date_dt,
+                           "end_date": end_date_dt})
+
+    # If the intervals_nb is 0, just append the start and the end date
+    else:
+        timeranges.append({"start_date": start_date_dt,
+                           "end_date": end_date_dt})
+
+    return timeranges
+
+
+def convert_timerange_to_str(timerange: dict,
+                             format_dates_mode: int
+                             ) -> dict:
+    """Convert a timerange dict with start_date and end_date as datetime
+    objects to a timerange dict with dates as strings with a given format."""
+
+    # Extract dates
+    start_date_dt = timerange["start_date"]
+    end_date_dt = timerange["end_date"]
+
+    # Format dates
+    start_date_str = format_dates(start_date_dt, format_dates_mode)
+    end_date_str = format_dates(end_date_dt, format_dates_mode)
+
+    return {"start_date": start_date_str, "end_date": end_date_str}
 
 
 ###############################################
@@ -301,8 +408,8 @@ def handle_params_storage(ressource_nb: int,
         end_date_dt = start_date_dt + default_ressource_timedelta[ressource_nb]
 
         # Transform the default start date and end date to the right format
-        start_date = format_dates(start_date_dt, for_storage = True)
-        end_date = format_dates(end_date_dt, for_storage = True)
+        start_date = format_dates(start_date_dt, mode = 1)
+        end_date = format_dates(end_date_dt, mode = 1)
 
     # Handle the presence of the units names with the handle_params_presence function
     units_names = handle_params_presence(eic_code = eic_code,

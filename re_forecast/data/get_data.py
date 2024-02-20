@@ -11,10 +11,9 @@ from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
 def get_rte_data() -> pd.DataFrame:
     """"""
 
-    # Download RTE data:
-    # 1/ Handle datetime
+    # Check if already exists, and if so read data
 
-    # Format data
+    # Download RTE data and format data
 
     # Store data
 

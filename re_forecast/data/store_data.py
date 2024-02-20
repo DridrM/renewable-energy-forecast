@@ -86,7 +86,7 @@ def store_to_csv(data: list,
             # Note: unlike for generation values, there is no register for units names
             # Create the csv path
             csv_path = create_csv_path_units_names(root_path,
-                                                ressource_nb)
+                                                   ressource_nb)
 
             # Write the csv if it doesn't exists
             write_if_not_exists(data, csv_path)

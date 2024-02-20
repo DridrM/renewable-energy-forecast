@@ -94,23 +94,20 @@ def download_rte_data(ressource_nb: int,
     return data
 
 
-def download_rte_data_without_limits(ressource_nb: int,
-                                     start_date = None,
-                                     eic_code = None,
-                                     prod_type = None,
-                                     prod_subtype = None,
-                                     ressources_urls = {1: RESSOURCE_1,
-                                                        2: RESSOURCE_2,
-                                                        3: RESSOURCE_3},
-                                     minimal_call_timedeltas = {1: 900,
-                                                                2: 3600,
-                                                                3: 900}
-                                     ) -> dict:
-    """"""
+# def download_rte_data_without_limits(ressource_nb: int,
+#                                      start_date = None,
+#                                      eic_code = None,
+#                                      prod_type = None,
+#                                      prod_subtype = None,
+#                                      ressources_urls = {1: RESSOURCE_1,
+#                                                         2: RESSOURCE_2,
+#                                                         3: RESSOURCE_3},
+#                                      ) -> dict:
+#     """"""
 
-    # Slice the dates with the slice dates function
+#     # Slice the dates with the slice dates function
 
 
-    # Iterate over the slice dates dict
-    # Space each iteration with a time.sleep to respect the time interval at which
-    # you call the API
+#     # Iterate over the slice dates dict
+#     # Space each iteration with a time.sleep to respect the time interval at which
+#     # you call the API
