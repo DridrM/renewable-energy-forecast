@@ -1,5 +1,6 @@
 import datetime
 import time
+import pandas as pd
 
 
 ####################################################
@@ -124,6 +125,10 @@ def format_dates(date: datetime.datetime,
     - 1: Format the date for the store data names
     - 2: Format the date for the slice_dates function"""
 
+    # Error handling: return None if the date is not a datetime object
+    if not date:
+        return
+
     # /!\ Option: Handle winter and summer time zones in France
 
     # Unpack all the time params and format them
@@ -195,11 +200,13 @@ def slice_dates(ressource_nb: int,
                                    end_date,
                                    ressource_nb,
                                    format_dates_mode = 2)
+    # Create the timeranges list
+    timeranges = list()
 
     # If the dates are 'None', we already know that is a default API call
     # and we can return 'dates' directly
     if not all(dates.values()):
-        return dates
+        return timeranges.append(dates)
 
     # Extract the dates from dates
     start_date_str = dates["start_date"]
@@ -217,9 +224,6 @@ def slice_dates(ressource_nb: int,
 
     # Transform timedelta_limit in datetime timedelta object
     timedelta_limit_dt = datetime.timedelta(days = timedelta_limit)
-
-    # Create the timeranges list
-    timeranges = list()
 
     # Iterate over the intervals_nb to create the time subranges if the interval_nb is more than 0
     if intervals_nb >= 1:
@@ -482,3 +486,47 @@ def api_delay(func,
             return func(**kwargs)
 
     return wrapper
+
+
+def call_delay(ressource_nb: int,
+               ressource_call_delays = {1: 900,
+                                        2: 3600,
+                                        3: 900}
+               ) -> None:
+    """Delay consecutive calls of the API with time.sleep,
+    depending on the ressource called."""
+
+    call_delay = ressource_call_delays[ressource_nb]
+
+    time.sleep(call_delay)
+
+
+def slice_df(df: pd.DataFrame,
+             ressource_nb: int,
+             row_rules = {1: 0,
+                          2: 0,
+                          3: "production_type in ['NUCLEAR', 'PUMPING', 'SOLAR', 'WIND'] or production_subtype not in ['TOTAL']"},
+             col_rules = {1: "production_type",
+                          2: "eic_code",
+                          3: "production_subtype"}
+             ) -> pd.Series:
+    """Slice a df following the rule dict. The dict
+    specified a rule given each ressource nb.
+    If the row rule indicate '0', no slice is undertake.
+    Else, the slice is made given the number of rows (exclusive)
+    The col_rules indicate a column to pick within the df."""
+
+    # Set the rule for rows and cols
+    row_rule = row_rules[ressource_nb]
+    col_rule = col_rules[ressource_nb]
+
+    # If the rule specify '0', don't slice
+    if row_rule == 0:
+        # Just make a selection for the cols
+        return df.loc[:, col_rule]
+
+    # Make a selection for the rows using query
+    df = df.query(row_rule)
+
+    # Make the selection for the cols and return
+    return df.loc[:, col_rule]

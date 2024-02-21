@@ -7,6 +7,12 @@ from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PROD
 from re_forecast.data.utils import handle_params_storage, format_dates, create_csv_path, create_csv_path_units_names
 
 
+def register_exists(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> bool:
+    """Return True if the register exists, false otherwise"""
+
+    return os.path.isfile(register_path)
+
+
 def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
                     register_path = DATA_ENERGY_PRODUCTION_REGISTER
                     ) -> None:
@@ -28,6 +34,20 @@ def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
         writer = csv.DictWriter(f, fieldnames = fields.values())
 
         writer.writeheader()
+
+
+def create_hash_id(*params) -> int:
+    """Create a hash int given any number of params"""
+
+    # Create an empty string as base to receive the params str
+    hash_base = ""
+
+    # Iterate over the params and fill the hash_base
+    for param in params:
+        hash_base += f"{param}"
+
+    # Return the hash of hash_base
+    return hash(hash_base)
 
 
 def create_metadata_row(ressource_nb: int,
@@ -79,8 +99,7 @@ def create_metadata_row(ressource_nb: int,
     metadata[csv_name_key] = csv_name
 
     # Create a hash with the csv name and the curent date, and fill the hash_id field
-    hash_base = f"{now_str}{csv_name}"
-    metadata[hash_key] = hash(hash_base)
+    metadata[hash_key] = create_hash_id(now_str, csv_name)
 
     return metadata
 
