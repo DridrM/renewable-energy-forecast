@@ -110,12 +110,12 @@ def extract_generation_values(json: dict,
             # Return the list of the generation values per hour
             return unit[key_lvl_2_values]
 
-
+"""
 def extract_all_generation_values(json: dict,
                                   ressources_nb: int,
                                   units_names: list
                                   ) -> list:
-    """Return the generation values for all units names"""
+    """"Return the generation values for all units names""""
 
     # Instanciate an empty list to add generation_values lists to
     generation_values_all = []
@@ -144,5 +144,78 @@ def extract_all_generation_values(json: dict,
 
         # Add the curent generation_values to generation_values_all
         generation_values_all += generation_values
+
+    return generation_values_all
+"""
+
+def extract_all_generation_values(json: dict,
+                                  ressource_nb: int,
+                                  nomenclature_lvl_1 = {1: "actual_generations_per_production_type",
+                                                        2: "actual_generations_per_unit",
+                                                        3: "generation_mix_15min_time_scale"},
+                                  nomenclature_lvl_2_units = {1: "production_type",
+                                                              2: "unit",
+                                                              3: ["production_type", "production_subtype"]},
+                                  nomenclature_lvl_3_units = {1: None,
+                                                              2: "eic_code",
+                                                              3: None},
+                                  nomenclature_lvl_2_values = {1: "values",
+                                                               2: "values",
+                                                               3: "values"}
+                                  ) -> list:
+    """Return the generation values for all units names"""
+
+    # Instanciate an empty list to add generation_values lists to
+    generation_values_all = []
+
+    # Choose the right keys depending on the ressource call
+    key_lvl_1 = nomenclature_lvl_1[ressource_nb]
+    key_lvl_2_units = nomenclature_lvl_2_units[ressource_nb]
+    key_lvl_2_values = nomenclature_lvl_2_values[ressource_nb]
+    key_lvl_3_units = nomenclature_lvl_3_units[ressource_nb]
+
+    # Error handling: when server return an error message
+    # If the server has return an error message when we used the function 'get_rte_data',
+    # This first step should not work
+    try:
+        # Extract the 'units' from the json
+        units = json[key_lvl_1]
+
+    # In the case of the server return an error, show the error message
+    except:
+        print("The server encounter an error when the function 'download_rte_data' call the API")
+
+        # In this case 'json' should be a dict containing an error message
+        print(json)
+
+        # Stop the function here
+        return
+
+    # Iterate over the units
+    for unit in units:
+        # Extract the values for one unit
+        values = unit[key_lvl_2_values]
+
+        # Append the unit name to the 'values' dict
+        for value in values:
+            # If the ressource 2 is called, extract and append the unit_name as following
+            if ressource_nb == 1:
+                unit_name = unit[key_lvl_2_units]
+                value[key_lvl_2_units] = unit_name
+
+            # If the ressource 2 is called, extract and append the unit_name as following
+            elif ressource_nb == 2:
+                unit_name = unit[key_lvl_2_units][key_lvl_3_units]
+                value[key_lvl_3_units] = unit_name
+
+            # For ressource 3
+            else:
+                unit_name = unit[key_lvl_2_units[0]]
+                unit_subname = unit[key_lvl_2_units[1]]
+                value[key_lvl_2_units[0]] = unit_name
+                value[key_lvl_2_units[1]] = unit_subname
+
+        # Add for each units its values to the list 'generation_values_all
+        generation_values_all += values
 
     return generation_values_all

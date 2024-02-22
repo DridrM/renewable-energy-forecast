@@ -81,7 +81,7 @@ def create_metadata_row(ressource_nb: int,
 
     # Append to the row the creation date
     now_dt = datetime.datetime.now()
-    now_str = format_dates(now_dt, for_storage = True)
+    now_str = format_dates(now_dt, mode = 1)
     metadata[creation_date_key] = now_str
 
     # Append to the row the ressource name
@@ -110,6 +110,7 @@ def fill_register(ressource_nb: int,
                   eic_code: str | None,
                   prod_type: str | None,
                   prod_subtype: str | None,
+                  fields = METADATA_ENERGY_PRODUCTION_FIELDS,
                   register_path = DATA_ENERGY_PRODUCTION_REGISTER
                   ) -> None:
     """Fill the register with data generation date, file name, ressource called
@@ -128,26 +129,19 @@ def fill_register(ressource_nb: int,
 
     # Append a new line to the register
     with open(register_path, mode = 'a') as f:
-        writer = csv.DictWriter(f)
+        writer = csv.DictWriter(f, fieldnames = fields.values())
 
         writer.writerow(row)
 
 
-def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER,
-                  return_register = False
-                  ) -> None | pd.DataFrame:
-    """Print the register in any cases. If return_register is set to True,
-    the register is returned."""
+def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> None | pd.DataFrame:
+    """Read and return the register as dataframe."""
 
     # Load the register
     register = pd.read_csv(register_path)
 
-    # Show the register
-    print(register)
-
     # Return the register if specified
-    if return_register:
-        return register
+    return register
 
 
 def delete_generation_data(*hash_id: int,

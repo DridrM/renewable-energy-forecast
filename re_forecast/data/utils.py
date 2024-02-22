@@ -46,7 +46,7 @@ def handle_datetime_limits(start_date: str,
     # If at least one of the dates is not provided:
     if not all((start_date, end_date)):
         # Warning message
-        print('At least one of the dates is not provided')
+        print("At least one of the dates is not provided, default API call will be made")
         # Return a dict with start and end date as 'None'
         return {'start_date': None, 'end_date': None}
 
@@ -392,7 +392,7 @@ def handle_params_storage(ressource_nb: int,
     dates = handle_datetime_limits(start_date,
                                    end_date,
                                    ressource_nb,
-                                   for_storage = True)
+                                   format_dates_mode = 1)
 
     # Extract start and end date
     start_date = dates["start_date"]
