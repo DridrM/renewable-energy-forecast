@@ -24,7 +24,7 @@ def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
     - The params of the API call corresponding to a given generation data csv"""
 
     # If the register already exists, just print a warning message and return
-    if not os.path.isfile(register_path):
+    if os.path.isfile(register_path):
         print("The register already exists")
 
         return
@@ -140,7 +140,7 @@ def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> None | pd.
     # Load the register
     register = pd.read_csv(register_path)
 
-    # Return the register if specified
+    # Return the register
     return register
 
 

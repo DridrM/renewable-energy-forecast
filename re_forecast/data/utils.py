@@ -415,14 +415,14 @@ def handle_params_storage(ressource_nb: int,
         start_date = format_dates(start_date_dt, mode = 1)
         end_date = format_dates(end_date_dt, mode = 1)
 
+    # We first update the storage params dict with the start date and the end date
+    storage_params_cp["start_date"] = start_date
+    storage_params_cp["end_date"] = end_date
+
     # Handle the presence of the units names with the handle_params_presence function
     units_names = handle_params_presence(eic_code = eic_code,
                                          prod_type = prod_type,
                                          prod_subtype = prod_subtype)
-
-    # We first update the storage params dict with the start date and the end date
-    storage_params_cp["start_date"] = start_date
-    storage_params_cp["end_date"] = end_date
 
     # Choose the right column to put in the unit name
     col = units_names_cols[ressource_nb]
@@ -497,6 +497,8 @@ def call_delay(ressource_nb: int,
     depending on the ressource called."""
 
     call_delay = ressource_call_delays[ressource_nb]
+
+    print(f"Please wait {call_delay // 60} minutes until another API call can be done...")
 
     time.sleep(call_delay)
 
