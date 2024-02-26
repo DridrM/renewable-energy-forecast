@@ -3,8 +3,8 @@ import csv
 import os
 import pandas as pd
 
-from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PRODUCTION_REGISTER, METADATA_ENERGY_PRODUCTION_FIELDS
 from re_forecast.data.utils import handle_params_storage, format_dates, create_csv_path, create_csv_path_units_names
+from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PRODUCTION_REGISTER, METADATA_ENERGY_PRODUCTION_FIELDS
 
 
 def register_exists(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> bool:
@@ -98,7 +98,7 @@ def create_metadata_row(ressource_nb: int,
                                return_csv_name = True)
     metadata[csv_name_key] = csv_name
 
-    # Create a hash with the csv name and the curent date, and fill the hash_id field
+    # Create a hash with the csv name (and the curent date), and fill the hash_id field
     metadata[hash_key] = create_hash_id(now_str, csv_name)
 
     return metadata

@@ -17,6 +17,7 @@ def get_rte_data(ressource_nb: int,
                  prod_type: str | None,
                  prod_subtype: str | None,
                  creation_date: str | None,
+                 generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
                  metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
                  ) -> pd.DataFrame:
     """"""
@@ -66,7 +67,7 @@ def get_rte_data(ressource_nb: int,
 
         ## Store the data
         store_to_csv(generation_values_all,
-                     DATA_CSV_ENERGY_PRODUCTION_PATH,
+                     generation_data_path,
                      ressource_nb,
                      start_date,
                      end_date,
