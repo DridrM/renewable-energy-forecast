@@ -77,7 +77,15 @@ def get_rte_data(ressource_nb: int,
                      store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
 
         ## Read the data
-        # Create the read_data function
+        generation_data_filtered = read_generation_data(ressource_nb,
+                                                        start_date,
+                                                        end_date,
+                                                        eic_code,
+                                                        prod_type,
+                                                        prod_subtype,
+                                                        generation_data_path)
+
+        return generation_data_filtered
 
     else:
         # Read the register
