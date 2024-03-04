@@ -3,14 +3,48 @@ import csv
 import os
 import pandas as pd
 
-from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PRODUCTION_REGISTER, METADATA_ENERGY_PRODUCTION_FIELDS
 from re_forecast.data.utils import handle_params_storage, format_dates, create_csv_path, create_csv_path_units_names
+from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, DATA_ENERGY_PRODUCTION_REGISTER, METADATA_ENERGY_PRODUCTION_FIELDS
 
 
 def register_exists(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> bool:
     """Return True if the register exists, false otherwise"""
 
     return os.path.isfile(register_path)
+
+
+def file_exists(ressource_nb: int,
+                start_date,
+                end_date,
+                eic_code,
+                production_type,
+                production_subtype,
+                creation_date: str,
+                metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS) -> bool:
+    """"""
+
+    # Read the register
+    register = read_register()
+
+    # Recreate the csv path and the hash_id
+    csv_name = create_csv_path("", # It is just to trigger the create_csv_path function and avoid a positionnal argument error.
+                               ressource_nb,
+                               start_date,
+                               end_date,
+                               eic_code,
+                               production_type,
+                               production_subtype,
+                               return_csv_name = True)
+    hash_id = create_hash_id(creation_date, csv_name)
+    print(csv_name, hash_id)
+
+    # Check in the register if already exists, and if so return data
+    hash_col_name = metadata_fields[1]
+
+    # Transform the query into a bool
+    query_response_state = register.query(f"{hash_col_name} == {hash_id}").empty
+
+    return True if not query_response_state else False
 
 
 def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
@@ -54,8 +88,8 @@ def create_metadata_row(ressource_nb: int,
                         start_date: str | None,
                         end_date: str | None,
                         eic_code: str | None,
-                        prod_type: str | None,
-                        prod_subtype: str | None,
+                        production_type: str | None,
+                        production_subtype: str | None,
                         ressources_names = {1: "actual_generations_per_production_type",
                                             2: "actual_generations_per_unit",
                                             3: "generation_mix_15min_time_scale"},
@@ -69,8 +103,8 @@ def create_metadata_row(ressource_nb: int,
                                      start_date,
                                      end_date,
                                      eic_code,
-                                     prod_type,
-                                     prod_subtype)
+                                     production_type,
+                                     production_subtype)
 
     # Pick the names of the fields to append to the 'metadata' dict
     # in the metadata fields general parameter
@@ -93,12 +127,12 @@ def create_metadata_row(ressource_nb: int,
                                start_date,
                                end_date,
                                eic_code,
-                               prod_type,
-                               prod_subtype,
+                               production_type,
+                               production_subtype,
                                return_csv_name = True)
     metadata[csv_name_key] = csv_name
 
-    # Create a hash with the csv name and the curent date, and fill the hash_id field
+    # Create a hash with the csv name (and the curent date), and fill the hash_id field
     metadata[hash_key] = create_hash_id(now_str, csv_name)
 
     return metadata
@@ -108,8 +142,8 @@ def fill_register(ressource_nb: int,
                   start_date: str | None,
                   end_date: str | None,
                   eic_code: str | None,
-                  prod_type: str | None,
-                  prod_subtype: str | None,
+                  production_type: str | None,
+                  production_subtype: str | None,
                   fields = METADATA_ENERGY_PRODUCTION_FIELDS,
                   register_path = DATA_ENERGY_PRODUCTION_REGISTER
                   ) -> None:
@@ -124,8 +158,8 @@ def fill_register(ressource_nb: int,
                               start_date,
                               end_date,
                               eic_code,
-                              prod_type,
-                              prod_subtype)
+                              production_type,
+                              production_subtype)
 
     # Append a new line to the register
     with open(register_path, mode = 'a') as f:
@@ -134,7 +168,7 @@ def fill_register(ressource_nb: int,
         writer.writerow(row)
 
 
-def show_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> None | pd.DataFrame:
+def read_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> pd.DataFrame:
     """Read and return the register as dataframe."""
 
     # Load the register

@@ -1,6 +1,8 @@
 import requests
-from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_2, RESSOURCE_3, CONTENT_TYPE, CLIENT_SECRET
+
+
 from re_forecast.data.utils import handle_params
+from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_2, RESSOURCE_3, CONTENT_TYPE, CLIENT_SECRET
 
 
 def collect_rte_token(base_url: str,
@@ -55,8 +57,8 @@ def download_rte_data(ressource_nb: int,
                       start_date = None,
                       end_date = None,
                       eic_code = None,
-                      prod_type = None,
-                      prod_subtype = None,
+                      production_type = None,
+                      production_subtype = None,
                       ressources_urls = {1: RESSOURCE_1,
                                          2: RESSOURCE_2,
                                          3: RESSOURCE_3}
@@ -82,8 +84,8 @@ def download_rte_data(ressource_nb: int,
                            start_date,
                            end_date,
                            eic_code,
-                           prod_type,
-                           prod_subtype)
+                           production_type,
+                           production_subtype)
 
     # Query the RTE API with ressource number given
     data = query_rte_api(token_infos,
@@ -97,8 +99,8 @@ def download_rte_data(ressource_nb: int,
 # def download_rte_data_without_limits(ressource_nb: int,
 #                                      start_date = None,
 #                                      eic_code = None,
-#                                      prod_type = None,
-#                                      prod_subtype = None,
+#                                      production_type = None,
+#                                      production_subtype = None,
 #                                      ressources_urls = {1: RESSOURCE_1,
 #                                                         2: RESSOURCE_2,
 #                                                         3: RESSOURCE_3},

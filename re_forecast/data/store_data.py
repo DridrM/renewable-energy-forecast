@@ -66,8 +66,8 @@ def store_to_csv(data: list,
                  start_date: str | None,
                  end_date: str | None,
                  eic_code: str | None,
-                 prod_type: str | None,
-                 prod_subtype: str | None,
+                 production_type: str | None,
+                 production_subtype: str | None,
                  store_units_names = False
                  ) -> None:
     """Store the format data into a csv, using the create_csv_path
@@ -102,16 +102,16 @@ def store_to_csv(data: list,
                                        start_date,
                                        end_date,
                                        eic_code,
-                                       prod_type,
-                                       prod_subtype)
+                                       production_type,
+                                       production_subtype)
 
             # Fill the register
             fill_register(ressource_nb,
                           start_date,
                           end_date,
                           eic_code,
-                          prod_type,
-                          prod_subtype)
+                          production_type,
+                          production_subtype)
 
             # Again, write the csv if it doesn't exists already
             write_if_not_exists(data, csv_path)

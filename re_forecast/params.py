@@ -42,8 +42,8 @@ METADATA_ENERGY_PRODUCTION_FIELDS = {1: 'hash_id',
                                      4: 'start_date',
                                      5: 'end_date',
                                      6: 'eic_code',
-                                     7: 'prod_type',
-                                     8: 'prod_subtype',
+                                     7: 'production_type',
+                                     8: 'production_subtype',
                                      9: 'file_name'}
 
 # Path to store meteo predcion CSVs
