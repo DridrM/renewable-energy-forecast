@@ -1,7 +1,7 @@
 import pandas as pd
 
-from re_forecast.data.manage_data_storage import show_register
-from re_forecast.data.utils import create_csv_path, handle_params_presence
+from re_forecast.data.utils import create_csv_path, handle_params_presence, handle_params_presence_read_mode
+from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
 
 
 def construct_query_string(bound_word = " and ",
@@ -19,7 +19,7 @@ def construct_query_string(bound_word = " and ",
     for param_key, param in params.items():
         # Construct the param sub string if the param is not 'None'
         if param:
-            query_sub_string = f"{param_key} == {param}"
+            query_sub_string = f"{param_key} == '{param}'"
 
             # Add to the query string
             query_string += f"{query_sub_string}{bound_word}"
@@ -31,8 +31,8 @@ def construct_query_string(bound_word = " and ",
 
 def handle_query(ressource_nb: int,
                  eic_code: str | None,
-                 prod_type: str | None,
-                 prod_subtype: str | None
+                 production_type: str | None,
+                 production_subtype: str | None
                  ) -> str:
     """Construct the query strinng depending on the ressource call.
     If the parameters passes doesn't correspond to the ressource call,
@@ -41,7 +41,7 @@ def handle_query(ressource_nb: int,
     match ressource_nb:
         case 1:
             # Handle the param presence
-            params = handle_params_presence(prod_type = prod_type)
+            params = handle_params_presence(production_type = production_type)
 
             # Case the param does not correspond to the ressource called
             if not params:
@@ -50,7 +50,7 @@ def handle_query(ressource_nb: int,
 
             # In other case, return the query string
             else:
-                return construct_query_string(prod_type = prod_type)
+                return construct_query_string(production_type = production_type)
 
 
         case 2:
@@ -68,8 +68,8 @@ def handle_query(ressource_nb: int,
 
         case 3:
             # Handle the param presence
-            params = handle_params_presence(prod_type = prod_type,
-                                            prod_subtype = prod_subtype)
+            params = handle_params_presence(production_type = production_type,
+                                            production_subtype = production_subtype)
 
             # Case the param does not correspond to the ressource called
             if not params:
@@ -78,15 +78,15 @@ def handle_query(ressource_nb: int,
 
             # In other case, return the query string
             else:
-                return construct_query_string(prod_type = prod_type,
-                                              prod_subtype = prod_subtype)
+                return construct_query_string(production_type = production_type,
+                                              production_subtype = production_subtype)
 
 
 def query_generation_data(generation_data: pd.DataFrame,
                           ressource_nb: int,
                           eic_code: str | None,
-                          prod_type: str | None,
-                          prod_subtype: str | None
+                          production_type: str | None,
+                          production_subtype: str | None
                           ) -> pd.DataFrame:
     """Query the generation data df with the query string constructed with the
     construct_query_string funnction. If no params are given, the function return
@@ -96,9 +96,9 @@ def query_generation_data(generation_data: pd.DataFrame,
     function."""
 
     # Use the handle params presence function
-    params = handle_params_presence(eic_code = eic_code,
-                                    prod_type = prod_type,
-                                    prod_subtype = prod_subtype)
+    params = handle_params_presence_read_mode(eic_code = eic_code,
+                                              production_type = production_type,
+                                              production_subtype = production_subtype)
 
     # If there is no params there is no query, just return the data as it is
     if not params:
@@ -107,8 +107,8 @@ def query_generation_data(generation_data: pd.DataFrame,
     # Construct the query string
     query_string = handle_query(ressource_nb,
                                 eic_code = params["eic_code"],
-                                prod_type = params["prod_type"],
-                                prod_subtype = params["prod_subtype"])
+                                production_type = params["production_type"],
+                                production_subtype = params["production_subtype"])
 
     # The query string can be empty when the param(s) doesn't correspond to the ressource
     if not query_string:
@@ -122,8 +122,8 @@ def read_generation_data(ressource_nb: int,
                          start_date: str | None,
                          end_date: str | None,
                          eic_code: str | None,
-                         prod_type: str | None,
-                         prod_subtype: str | None,
+                         production_type: str | None,
+                         production_subtype: str | None,
                          generation_data_path: str,
                          ) -> pd.DataFrame:
     """Read the generation data and query it in order to filter given the params
@@ -135,21 +135,43 @@ def read_generation_data(ressource_nb: int,
                                            ressource_nb,
                                            start_date,
                                            end_date,
-                                           eic_code,
-                                           prod_type,
-                                           prod_subtype)
+                                           None,
+                                           None,
+                                           None) # The last three params are set to 'None' because of the download strategy:
+                                                                # Download for all type of generation, and filter for a specific type of generation
 
     # Construct the full file path
     generation_data_path = f"{generation_data_path}/{generation_file_name}"
 
     # Read the generation file
-    generation_data_full = pd.read_csv(generation_data_path, header = True)
+    generation_data_full = pd.read_csv(generation_data_path)
 
     # Filter the generation file
     generation_data_filtered = query_generation_data(generation_data_full,
                                                      ressource_nb,
                                                      eic_code,
-                                                     prod_type,
-                                                     prod_subtype)
+                                                     production_type,
+                                                     production_subtype)
 
     return generation_data_filtered
+
+
+if __name__ == "__main__":
+    # Set all the params
+    ressource = 1
+    start_date = "2024-02-25 00:00:00"
+    end_date = "2024-02-25 23:00:00"
+    eic_code = None
+    production_type = "WIND_ONSHORE"
+    production_subtype = None
+
+    generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
+
+    # Test the function
+    read_generation_data(ressource,
+                        start_date,
+                        end_date,
+                        eic_code,
+                        production_type,
+                        production_subtype,
+                        generation_data_path)

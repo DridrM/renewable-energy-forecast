@@ -21,6 +21,19 @@ def handle_params_presence(**params) -> dict | None:
     return None
 
 
+def handle_params_presence_read_mode(**params) -> dict | None:
+    """Return the dict of params without 'None'
+    if there is at least one provided, else return None"""
+
+    # If at least one of the params is not None:
+    if any(params.values()):
+        # Return the dict without
+        return {key: value for (key, value) in params.items()}
+
+    # Else return None
+    return None
+
+
 def handle_datetime_limits(start_date: str,
                            end_date: str,
                            ressource_nb: int,
@@ -151,8 +164,8 @@ def handle_params(ressource_nb: int,
                  start_date: str | None,
                  end_date: str | None,
                  eic_code: str | None,
-                 prod_type: str | None,
-                 prod_subtype: str | None) -> dict:
+                 production_type: str | None,
+                 production_subtype: str | None) -> dict:
     """Pack together the datetime limits handling function and
     the params presence function.
     Return a dict of params with the right format for the RTE API call."""
@@ -171,8 +184,8 @@ def handle_params(ressource_nb: int,
     params = handle_params_presence(start_date = start_date,
                                     end_date = end_date,
                                     eic_code = eic_code,
-                                    prod_type = prod_type,
-                                    prod_subtype = prod_subtype)
+                                    production_type = production_type,
+                                    production_subtype = production_subtype)
 
     return params
 
@@ -290,8 +303,8 @@ def create_csv_path(root_path: str,
                     start_date: str | None,
                     end_date: str | None,
                     eic_code: str | None,
-                    prod_type: str | None,
-                    prod_subtype: str | None,
+                    production_type: str | None,
+                    production_subtype: str | None,
                     ressources_names = {1: "actual_generations_per_production_type",
                                         2: "actual_generations_per_unit",
                                         3: "generation_mix_15min_time_scale"},
@@ -308,8 +321,8 @@ def create_csv_path(root_path: str,
                                    start_date,
                                    end_date,
                                    eic_code,
-                                   prod_type,
-                                   prod_subtype)
+                                   production_type,
+                                   production_subtype)
 
     # Iterate over the params dict to fill the params string
     for param in params.values():
@@ -359,19 +372,19 @@ def handle_params_storage(ressource_nb: int,
                           start_date: str | None,
                           end_date: str | None,
                           eic_code: str | None,
-                          prod_type: str | None,
-                          prod_subtype: str | None,
+                          production_type: str | None,
+                          production_subtype: str | None,
                           default_ressource_timedelta = {1: datetime.timedelta(hours = 23),
                                                          2: datetime.timedelta(hours = 23),
                                                          3: datetime.timedelta(hours = 23, minutes = 45)},
-                          units_names_cols = {1: "prod_type",
+                          units_names_cols = {1: "production_type",
                                               2: "eic_code",
-                                              3: "prod_subtype"},
+                                              3: "production_subtype"},
                           storage_params = {"start_date": None,
                                             "end_date": None,
                                             "eic_code": None,
-                                            "prod_type": None,
-                                            "prod_subtype": None}
+                                            "production_type": None,
+                                            "production_subtype": None}
                           ) -> dict:
     """Handle the consistency of the params used to fill the register and to
     create the csv paths for the downloaded generation datas.
@@ -421,8 +434,8 @@ def handle_params_storage(ressource_nb: int,
 
     # Handle the presence of the units names with the handle_params_presence function
     units_names = handle_params_presence(eic_code = eic_code,
-                                         prod_type = prod_type,
-                                         prod_subtype = prod_subtype)
+                                         production_type = production_type,
+                                         production_subtype = production_subtype)
 
     # Choose the right column to put in the unit name
     col = units_names_cols[ressource_nb]
@@ -436,9 +449,9 @@ def handle_params_storage(ressource_nb: int,
 
     # Else return the storage_params dict with the unit name filled in the right column
     match ressource_nb:
-        case 1: storage_params_cp[col] = prod_type
+        case 1: storage_params_cp[col] = production_type
         case 2: storage_params_cp[col] = eic_code
-        case 3: storage_params_cp[col] = prod_subtype
+        case 3: storage_params_cp[col] = production_subtype
 
     return storage_params_cp
 
