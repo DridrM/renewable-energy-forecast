@@ -28,7 +28,6 @@ def construct_query_string(bound_word = " and ",
     return query_string.strip(bound_word)
 
 
-
 def handle_query(ressource_nb: int,
                  eic_code: str | None,
                  production_type: str | None,
