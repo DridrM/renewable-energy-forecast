@@ -19,7 +19,9 @@ def file_exists(ressource_nb: int,
                 eic_code: str | None,
                 production_type: str | None,
                 production_subtype: str | None,
-                metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS) -> bool:
+                metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS,
+                return_csv_name = False
+                ) -> bool:
     """Return True if the file exists, False otherwise.
     Any file not present in the register is considered as non existing."""
 
@@ -45,9 +47,13 @@ def file_exists(ressource_nb: int,
     csv_name_key = metadata_fields[8]
 
     # Transform the query into a bool
-    query_response_state = register.query(f"{csv_name_key} == '{csv_name}'").empty
+    file_exists_bool = not register.query(f"{csv_name_key} == '{csv_name}'").empty
 
-    return True if not query_response_state else False
+    # If the return csv_name param is set to True, return file_exists and the csv name
+    if return_csv_name:
+        return file_exists_bool, csv_name
+
+    return file_exists_bool
 
 
 def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
@@ -178,37 +184,48 @@ def read_register(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> pd.DataFra
     return register
 
 
-def delete_generation_data(*hash_id: int,
+def delete_generation_data(ressource_nb: int,
+                           start_date: str | None,
+                           end_date: str | None,
+                           eic_code: str | None,
+                           production_type: str | None,
+                           production_subtype: str | None,
                            register_path = DATA_ENERGY_PRODUCTION_REGISTER,
                            root_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
                            metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
                            ) -> None:
-    """Remove the generation data csvs among the specified hash_id corresponding
-    to these csvs. Remove the lines corresponding to these files in the
-    register accordingly."""
+    """Remove a generation data file given its ressource number and its params,
+    and remove the corresponding row inside the register accordingly."""
 
-    # Open the register
-    register = pd.read_csv(register_path)
+    # Determine the existence of the file and recreate the csv file name
+    file_exists_bool, csv_name = file_exists(ressource_nb,
+                                             start_date,
+                                             end_date,
+                                             eic_code,
+                                             production_type,
+                                             production_subtype,
+                                             return_csv_name = True)
 
-    # Iterate over the hash_id tuple
-    for hash in hash_id:
-        # Read the csv name
-        hash_col = metadata_fields[1]
-        csv_name_col = metadata_fields[9]
-        csv_name = register.loc[register[hash_col] == hash, csv_name_col]
+    # If the file you want to delete does not exists, print an error message
+    if not file_exists_bool:
+        print("The file you want to delete does not exists")
+        return
 
-        # Contruct the csv path and delete the file
+    else:
+        # Open the register
+        register = read_register()
+
+        # Remove the row corresponding to the csv_name
+        csv_name_col = metadata_fields[8]
+        row_index = register.loc[register[csv_name_col] == csv_name, :].index
+        new_register = register.drop(row_index, axis = 0)
+
+        # Construct the csv_path and delete the file
         csv_path = f"{root_data_path}/{csv_name}"
-
-        # Delete the csv file
         os.remove(csv_path)
 
-    # Delete the lines in the register df in one time
-    indexes = register.loc[register.loc[hash_col].isin(hash_id), :].index
-    new_register = register.drop(indexes)
-
-    # Save the new register, overwrite the old register csv
-    new_register.to_csv(register_path)
+        # Save the new register by overwritting
+        new_register.to_csv(register_path)
 
 
 def delete_units_names(*ressource_nb: int,
