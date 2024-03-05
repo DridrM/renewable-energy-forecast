@@ -1,11 +1,11 @@
 import pandas as pd
 
 from re_forecast.data.load_data import download_rte_data
-from re_forecast.data.format_data import extract_generation_units, extract_generation_values, extract_all_generation_values
+from re_forecast.data.format_data import extract_generation_units, extract_all_generation_values
 from re_forecast.data.store_data import store_to_csv
-from re_forecast.data.manage_data_storage import create_hash_id, register_exists, create_register, read_register
+from re_forecast.data.manage_data_storage import register_exists, file_exists
 from re_forecast.data.read_data import read_generation_data
-from re_forecast.data.utils import api_delay, call_delay, slice_dates, create_csv_path, slice_df
+from re_forecast.data.utils import api_delay, call_delay, slice_dates
 from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, METADATA_ENERGY_PRODUCTION_FIELDS
 
 
@@ -16,9 +16,7 @@ def get_rte_data(ressource_nb: int,
                  eic_code: str | None,
                  production_type: str | None,
                  production_subtype: str | None,
-                 creation_date: str | None, # The creation date of the file if you know it
-                 generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
-                 metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS
+                 generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
                  ) -> pd.DataFrame:
     """"""
 
@@ -93,26 +91,17 @@ def get_rte_data(ressource_nb: int,
     # not exists, download, format, store and read a new dataset                #
     #############################################################################
     else:
-        # Read the register
-        register = read_register()
+        # Determine the existence of the file and recreate the csv file name
+        file_exists_bool = file_exists(ressource_nb,
+                                       start_date,
+                                       end_date,
+                                       eic_code,
+                                       production_type,
+                                       production_subtype)
 
-        # Recreate the csv path and the hash_id
-        csv_name = create_csv_path("", # It is just to trigger the create_csv_path function and avoid a positionnal argument error.
-                                   ressource_nb,
-                                   start_date,
-                                   end_date,
-                                   eic_code,
-                                   production_type,
-                                   production_subtype,
-                                   return_csv_name = True)
-        hash_id = create_hash_id(creation_date, csv_name)
-
-        # Check in the register if already exists, and if so return data
-        hash_col_name = metadata_fields[1]
-
-        ## If the dataset file already exists
-        if register.query(f"{hash_col_name} == {hash_id}"):
-            # Read the dataset corresponding to the csv path and return
+        ## If the dataset file exists, read it and return it filtered
+        if file_exists_bool:
+            # Read the data and return
             generation_data_filtered = read_generation_data(ressource_nb,
                                                             start_date,
                                                             end_date,
@@ -121,11 +110,12 @@ def get_rte_data(ressource_nb: int,
                                                             production_subtype,
                                                             generation_data_path)
 
-        # Download RTE data and format data
+            return generation_data_filtered
 
-        # Store data
+        ## If it doas not exists, download, format, store and read the data
+        else:
+            pass
 
-        # Read data
 
 
 @api_delay
