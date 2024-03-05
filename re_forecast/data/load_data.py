@@ -94,22 +94,3 @@ def download_rte_data(ressource_nb: int,
                          params = params)
 
     return data
-
-
-# def download_rte_data_without_limits(ressource_nb: int,
-#                                      start_date = None,
-#                                      eic_code = None,
-#                                      production_type = None,
-#                                      production_subtype = None,
-#                                      ressources_urls = {1: RESSOURCE_1,
-#                                                         2: RESSOURCE_2,
-#                                                         3: RESSOURCE_3},
-#                                      ) -> dict:
-#     """"""
-
-#     # Slice the dates with the slice dates function
-
-
-#     # Iterate over the slice dates dict
-#     # Space each iteration with a time.sleep to respect the time interval at which
-#     # you call the API

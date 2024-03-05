@@ -14,19 +14,23 @@ def register_exists(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> bool:
 
 
 def file_exists(ressource_nb: int,
-                start_date,
-                end_date,
-                eic_code,
-                production_type,
-                production_subtype,
-                creation_date: str,
+                start_date: str | None,
+                end_date: str | None,
+                eic_code: str | None,
+                production_type: str | None,
+                production_subtype: str | None,
                 metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS) -> bool:
-    """"""
+    """Return True if the file exists, False otherwise.
+    Any file not present in the register is considered as non existing."""
+
+    # Create the register if it doesn't exists
+    if not register_exists():
+        create_register()
 
     # Read the register
     register = read_register()
 
-    # Recreate the csv path and the hash_id
+    # Recreate the csv path
     csv_name = create_csv_path("", # It is just to trigger the create_csv_path function and avoid a positionnal argument error.
                                ressource_nb,
                                start_date,
@@ -35,14 +39,13 @@ def file_exists(ressource_nb: int,
                                production_type,
                                production_subtype,
                                return_csv_name = True)
-    hash_id = create_hash_id(creation_date, csv_name)
-    print(csv_name, hash_id)
+    # print(csv_name)
 
-    # Check in the register if already exists, and if so return data
-    hash_col_name = metadata_fields[1]
+    # Check in the register if the file already exists, and if so return data
+    csv_name_key = metadata_fields[8]
 
     # Transform the query into a bool
-    query_response_state = register.query(f"{hash_col_name} == {hash_id}").empty
+    query_response_state = register.query(f"{csv_name_key} == '{csv_name}'").empty
 
     return True if not query_response_state else False
 
@@ -71,7 +74,8 @@ def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
 
 
 def create_hash_id(*params) -> int:
-    """Create a hash int given any number of params"""
+    """Create a hash int given any number of params.
+    This function is conserved for legacy but no longer used."""
 
     # Create an empty string as base to receive the params str
     hash_base = ""
@@ -144,7 +148,7 @@ def fill_register(ressource_nb: int,
                   register_path = DATA_ENERGY_PRODUCTION_REGISTER
                   ) -> None:
     """Fill the register with data generation date, file name, ressource called
-    name, unique hash id and params values."""
+    name and params values."""
 
     # Use the create register function to create the register if it not already exists
     create_register()
