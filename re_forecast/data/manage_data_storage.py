@@ -108,10 +108,9 @@ def create_metadata_row(ressource_nb: int,
 
     # Pick the names of the fields to append to the 'metadata' dict
     # in the metadata fields general parameter
-    hash_key = metadata_fields[1]
-    creation_date_key = metadata_fields[2]
-    ressource_key = metadata_fields[3]
-    csv_name_key = metadata_fields[9]
+    creation_date_key = metadata_fields[1]
+    ressource_key = metadata_fields[2]
+    csv_name_key = metadata_fields[8]
 
     # Append to the row the creation date
     now_dt = datetime.datetime.now()
@@ -131,9 +130,6 @@ def create_metadata_row(ressource_nb: int,
                                production_subtype,
                                return_csv_name = True)
     metadata[csv_name_key] = csv_name
-
-    # Create a hash with the csv name (and the curent date), and fill the hash_id field
-    metadata[hash_key] = create_hash_id(now_str, csv_name)
 
     return metadata
 
