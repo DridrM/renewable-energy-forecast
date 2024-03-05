@@ -36,15 +36,14 @@ DATA_CSV_ENERGY_PRODUCTION_PATH = os.environ.get("DATA_CSV_ENERGY_PRODUCTION_PAT
 DATA_ENERGY_PRODUCTION_REGISTER = f"{DATA_CSV_ENERGY_PRODUCTION_PATH}/energy_production_register.csv"
 
 # Metadata fields for energy production data. Columns of the register
-METADATA_ENERGY_PRODUCTION_FIELDS = {1: 'hash_id',
-                                     2: 'creation_date',
-                                     3: 'ressource',
-                                     4: 'start_date',
-                                     5: 'end_date',
-                                     6: 'eic_code',
-                                     7: 'production_type',
-                                     8: 'production_subtype',
-                                     9: 'file_name'}
+METADATA_ENERGY_PRODUCTION_FIELDS = {1: 'creation_date',
+                                     2: 'ressource',
+                                     3: 'start_date',
+                                     4: 'end_date',
+                                     5: 'eic_code',
+                                     6: 'production_type',
+                                     7: 'production_subtype',
+                                     8: 'file_name'}
 
 # Path to store meteo predcion CSVs
 DATA_CSV_METEO_PATH = os.environ.get("DATA_CSV_METEO_PATH")
