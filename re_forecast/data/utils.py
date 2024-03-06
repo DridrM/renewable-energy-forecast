@@ -161,11 +161,12 @@ def format_dates(date: datetime.datetime,
 
 
 def handle_params(ressource_nb: int,
-                 start_date: str | None,
-                 end_date: str | None,
-                 eic_code: str | None,
-                 production_type: str | None,
-                 production_subtype: str | None) -> dict:
+                  start_date: str | None,
+                  end_date: str | None,
+                  eic_code: str | None,
+                  production_type: str | None,
+                  production_subtype: str | None
+                  ) -> dict:
     """Pack together the datetime limits handling function and
     the params presence function.
     Return a dict of params with the right format for the RTE API call."""

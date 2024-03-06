@@ -67,60 +67,46 @@ def get_rte_data(ressource_nb: int,
                  eic_code: str | None,
                  production_type: str | None,
                  production_subtype: str | None,
-                 generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
+                 generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
+                 ressources_names = {1: "actual_generations_per_production_type",
+                                     2: "actual_generations_per_unit",
+                                     3: "generation_mix_15min_time_scale"}
                  ) -> pd.DataFrame:
-    """"""
+    """End user and general purpose function used to download, format, store and read
+    the electricity generation data gather from the RTE API. The strategy used to manage the
+    data files storage is to download them for a given API ressource, start date and end date,
+    but for all generation units. When a specific data file is read, it is also filtered to
+    show you the result corresponding to the other params passed (eic_code, production_type,
+    production_subtype).
+    Notes:
+    - For the dates, please use this format: 'YYYY-MM-DD hh:mm:ss'
+    - For the eic code and the prod type, please refer to the API documentation"""
 
-    #############################################################################
-    # Verify if the register exists. If it doesn't, download, format, store     #
-    # and read a new dataset (the store_to_csv function include the creation of #
-    # a new register)                                                           #
-    #############################################################################
-    if not register_exists():
-        ## Download and format the data. The download and format function will
-        generation_values_all = download_and_format(ressource_nb,
-                                                    start_date,
-                                                    end_date)
-
-        ## Store the data
-        store_to_csv(generation_values_all,
-                     generation_data_path,
-                     ressource_nb,
-                     start_date,
-                     end_date,
-                     None,
-                     None,
-                     None,
-                     store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
-
-        ## Read the data
-        generation_data_filtered = read_generation_data(ressource_nb,
+    # First, check if the ressource number is correct
+    if ressource_nb in list(ressources_names.keys()):
+        #############################################################################
+        # Verify if the register exists. If it doesn't, download, format, store     #
+        # and read a new dataset (the store_to_csv function include the creation of #
+        # a new register)                                                           #
+        #############################################################################
+        if not register_exists():
+            ## Download and format the data. The download and format function will
+            generation_values_all = download_and_format(ressource_nb,
                                                         start_date,
-                                                        end_date,
-                                                        eic_code,
-                                                        production_type,
-                                                        production_subtype,
-                                                        generation_data_path)
+                                                        end_date)
 
-        return generation_data_filtered
+            ## Store the data
+            store_to_csv(generation_values_all,
+                        generation_data_path,
+                        ressource_nb,
+                        start_date,
+                        end_date,
+                        None,
+                        None,
+                        None,
+                        store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
 
-    #############################################################################
-    # Verify if the register exists. If it does, first check in the register if #
-    # the dataset file exists, read it and return it. If the dataset file does  #
-    # not exists, download, format, store and read a new dataset                #
-    #############################################################################
-    else:
-        # Determine the existence of the file and recreate the csv file name
-        file_exists_bool = file_exists(ressource_nb,
-                                       start_date,
-                                       end_date,
-                                       eic_code,
-                                       production_type,
-                                       production_subtype)
-
-        ## If the dataset file exists, read it and return it filtered
-        if file_exists_bool:
-            # Read the data and return
+            ## Read the data
             generation_data_filtered = read_generation_data(ressource_nb,
                                                             start_date,
                                                             end_date,
@@ -131,10 +117,67 @@ def get_rte_data(ressource_nb: int,
 
             return generation_data_filtered
 
-        ## If it does not exists, download, format, store and read the data
+        #############################################################################
+        # Verify if the register exists. If it does, first check in the register if #
+        # the dataset file exists, read it and return it. If the dataset file does  #
+        # not exists, download, format, store and read a new dataset                #
+        #############################################################################
         else:
-            pass
+            # Determine the existence of the file and recreate the csv file name
+            file_exists_bool = file_exists(ressource_nb,
+                                        start_date,
+                                        end_date,
+                                        eic_code,
+                                        production_type,
+                                        production_subtype)
 
+            ## If the dataset file exists, read it and return it filtered
+            if file_exists_bool:
+                # Read the data and return
+                generation_data_filtered = read_generation_data(ressource_nb,
+                                                                start_date,
+                                                                end_date,
+                                                                eic_code,
+                                                                production_type,
+                                                                production_subtype,
+                                                                generation_data_path)
+
+                return generation_data_filtered
+
+            ## If it does not exists, download, format, store and read the data
+            else:
+                ## Download and format the data. The download and format function will
+                generation_values_all = download_and_format(ressource_nb,
+                                                            start_date,
+                                                            end_date)
+
+                ## Store the data
+                store_to_csv(generation_values_all,
+                            generation_data_path,
+                            ressource_nb,
+                            start_date,
+                            end_date,
+                            None,
+                            None,
+                            None,
+                            store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
+
+                ## Read the data
+                generation_data_filtered = read_generation_data(ressource_nb,
+                                                                start_date,
+                                                                end_date,
+                                                                eic_code,
+                                                                production_type,
+                                                                production_subtype,
+                                                                generation_data_path)
+
+                return generation_data_filtered
+
+    # If the ressource number is not amoung the accepted ressource numbers, print an error message
+    else:
+        print("The ressource number given is incorrect. Here the ressource numbers accepted :\n")
+        for key, value in ressources_names.items():
+            print(f"{value} -> {key}")
 
 
 @api_delay

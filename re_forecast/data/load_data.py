@@ -6,9 +6,9 @@ from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_
 
 
 def collect_rte_token(base_url: str,
-                  ressource: str,
-                  content_type: str,
-                  client_secret: str) -> dict:
+                      ressource: str,
+                      content_type: str,
+                      client_secret: str) -> dict:
     """Query the (RTE) API with POST to collect an access token"""
 
     # Construct the url
@@ -67,7 +67,7 @@ def download_rte_data(ressource_nb: int,
     hangling presence, time limits and formating) and the final RTE API query.
     Notes:
     - For the dates, please use this format: 'YYYY-MM-DD hh:mm:ss'
-    - For the eic code and the prod type, please refer to the dates (for now)
+    - For the eic code and the prod type, please refer to the API documentation
     """
 
     # Collect the rte access token
