@@ -6,7 +6,58 @@ from re_forecast.data.store_data import store_to_csv
 from re_forecast.data.manage_data_storage import register_exists, file_exists
 from re_forecast.data.read_data import read_generation_data
 from re_forecast.data.utils import api_delay, call_delay, slice_dates
-from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, METADATA_ENERGY_PRODUCTION_FIELDS
+from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
+
+
+def download_and_format(ressource_nb: int,
+                        start_date: str,
+                        end_date: str
+                        ) -> list:
+    """The download and format function is made to bypass the time range limit for the
+    datas you can make for one ressource call. To do that, the time range specified is sliced
+    into smaller time ranges that respect the time range limit for the ressource called.
+    Then, we iterate over the date ranges to download and format the data. The different
+    slices of data are aggregated into one ('generation_values_all'). After each iteration,
+    a time delay is respected depending on the ressource in order to not overload the API."""
+
+    # Slice the dates
+    dates_ranges = slice_dates(ressource_nb,
+                               start_date,
+                               end_date)
+
+    # Create a list to collect the generation values after each iteration
+    generation_values_all = list()
+
+    # Iterate over the dates ranges
+    for i, date_range in enumerate(dates_ranges):
+        ## Download the dataset
+        # Extract the dates for this iteration
+        start_subdate = date_range["start_date"]
+        end_subdate = date_range["end_date"]
+
+        # Download the dataset
+        data = download_rte_data(ressource_nb,
+                                 start_subdate,
+                                 end_subdate)
+
+        ## Format the dataset
+        format_data = extract_all_generation_values(data,
+                                                    ressource_nb)
+
+        ## Add the curent list of generation values to generation_values_all
+        generation_values_all += format_data
+
+        # Verify if the last item of dates_ranges is reach; in that case, the loop
+        # is broken because there is no reason to delay
+        if (i + 1) == len(dates_ranges):
+            break
+
+        # Otherwise delay the next loop with a delay corresponding
+        # to the ressource called
+        else:
+            call_delay(ressource_nb)
+
+    return generation_values_all
 
 
 @api_delay
@@ -26,42 +77,10 @@ def get_rte_data(ressource_nb: int,
     # a new register)                                                           #
     #############################################################################
     if not register_exists():
-        # Slice the dates
-        dates_ranges = slice_dates(ressource_nb,
-                                   start_date,
-                                   end_date)
-
-        # Create a list to collect the generation values after each iteration
-        generation_values_all = list()
-
-        # Iterate over the dates ranges
-        for i, date_range in enumerate(dates_ranges):
-            ## Download the dataset
-            # Extract the dates for this iteration
-            start_subdate = date_range["start_date"]
-            end_subdate = date_range["end_date"]
-
-            # Download the dataset
-            data = download_rte_data(ressource_nb,
-                                     start_subdate,
-                                     end_subdate) # Maybe it is a better strategy to make a call for all units and to filter after
-
-            ## Format the dataset
-            format_data = extract_all_generation_values(data,
-                                                        ressource_nb)
-
-            ## Add the curent list of generation values to generation_values_all
-            generation_values_all += format_data
-
-            # Verify if the last item of dates_ranges is reach; in that case, the loop
-            # is broken because there is no reason to delay
-            if (i + 1) == len(dates_ranges):
-                break
-
-            # Otherwise delay the next loop with a delay corresponding
-            # to the ressource called
-            else:
-                call_delay(ressource_nb)
+        ## Download and format the data. The download and format function will
+        generation_values_all = download_and_format(ressource_nb,
+                                                    start_date,
+                                                    end_date)
 
         ## Store the data
         store_to_csv(generation_values_all,
@@ -112,7 +131,7 @@ def get_rte_data(ressource_nb: int,
 
             return generation_data_filtered
 
-        ## If it doas not exists, download, format, store and read the data
+        ## If it does not exists, download, format, store and read the data
         else:
             pass
 
