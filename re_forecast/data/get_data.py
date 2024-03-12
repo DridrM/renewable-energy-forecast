@@ -5,7 +5,7 @@ from re_forecast.data.format_data import extract_generation_units, extract_all_g
 from re_forecast.data.store_data import store_to_csv
 from re_forecast.data.manage_data_storage import register_exists, file_exists
 from re_forecast.data.read_data import read_generation_data
-from re_forecast.data.utils import api_delay, call_delay, slice_dates
+from re_forecast.data.utils import api_delay, call_delay, slice_dates, format_dates
 from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
 
 
@@ -32,8 +32,8 @@ def download_and_format(ressource_nb: int,
     for i, date_range in enumerate(dates_ranges):
         ## Download the dataset
         # Extract the dates for this iteration
-        start_subdate = date_range["start_date"]
-        end_subdate = date_range["end_date"]
+        start_subdate = format_dates(date_range["start_date"], mode = 2)
+        end_subdate = format_dates(date_range["end_date"], mode = 2)
 
         # Download the dataset
         data = download_rte_data(ressource_nb,
@@ -73,14 +73,15 @@ def get_rte_data(ressource_nb: int,
                                      3: "generation_mix_15min_time_scale"}
                  ) -> pd.DataFrame:
     """End user and general purpose function used to download, format, store and read
-    the electricity generation data gather from the RTE API. The strategy used to manage the
+    the electricity generation data collected from the RTE API. The strategy used to manage the
     data files storage is to download them for a given API ressource, start date and end date,
     but for all generation units. When a specific data file is read, it is also filtered to
     show you the result corresponding to the other params passed (eic_code, production_type,
     production_subtype).
     Notes:
     - For the dates, please use this format: 'YYYY-MM-DD hh:mm:ss'
-    - For the eic code and the prod type, please refer to the API documentation"""
+    - For the eic code and the prod type, please refer to the API documentation
+    Note: Fill the function arguments as key words arguments, due to the api_delay decorator."""
 
     # First, check if the ressource number is correct
     if ressource_nb in list(ressources_names.keys()):
@@ -97,14 +98,14 @@ def get_rte_data(ressource_nb: int,
 
             ## Store the data
             store_to_csv(generation_values_all,
-                        generation_data_path,
-                        ressource_nb,
-                        start_date,
-                        end_date,
-                        None,
-                        None,
-                        None,
-                        store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
+                         generation_data_path,
+                         ressource_nb,
+                         start_date,
+                         end_date,
+                         None,
+                         None,
+                         None,
+                         store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
 
             ## Read the data
             generation_data_filtered = read_generation_data(ressource_nb,
@@ -125,11 +126,11 @@ def get_rte_data(ressource_nb: int,
         else:
             # Determine the existence of the file and recreate the csv file name
             file_exists_bool = file_exists(ressource_nb,
-                                        start_date,
-                                        end_date,
-                                        eic_code,
-                                        production_type,
-                                        production_subtype)
+                                           start_date,
+                                           end_date,
+                                           None,
+                                           None,
+                                           None)
 
             ## If the dataset file exists, read it and return it filtered
             if file_exists_bool:
@@ -153,14 +154,14 @@ def get_rte_data(ressource_nb: int,
 
                 ## Store the data
                 store_to_csv(generation_values_all,
-                            generation_data_path,
-                            ressource_nb,
-                            start_date,
-                            end_date,
-                            None,
-                            None,
-                            None,
-                            store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
+                             generation_data_path,
+                             ressource_nb,
+                             start_date,
+                             end_date,
+                             None,
+                             None,
+                             None,
+                             store_units_names = False) # Note that if the register does not exists, it is created at this step inside the 'store_to_csv' function
 
                 ## Read the data
                 generation_data_filtered = read_generation_data(ressource_nb,

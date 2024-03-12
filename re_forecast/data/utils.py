@@ -54,6 +54,10 @@ def handle_datetime_limits(start_date: str,
           The end date is set to that limit
     - Else, the function return a dict with start and end date to the right API format
     Please respect the following datetime format: 'YYYY-MM-DD hh:mm:ss'.
+    Mode correspond to the format mode of the output dates:
+    - 0: Format the date for the RTE API call
+    - 1: Format the date for the store data names
+    - 2: Format the date for the slice_dates function
     """
 
     # If at least one of the dates is not provided:

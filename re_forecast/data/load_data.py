@@ -1,6 +1,5 @@
 import requests
 
-
 from re_forecast.data.utils import handle_params
 from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_2, RESSOURCE_3, CONTENT_TYPE, CLIENT_SECRET
 

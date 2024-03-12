@@ -41,7 +41,6 @@ def file_exists(ressource_nb: int,
                                production_type,
                                production_subtype,
                                return_csv_name = True)
-    # print(csv_name)
 
     # Check in the register if the file already exists, and if so return data
     csv_name_key = metadata_fields[8]
