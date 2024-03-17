@@ -13,15 +13,15 @@ def register_exists(register_path = DATA_ENERGY_PRODUCTION_REGISTER) -> bool:
     return os.path.isfile(register_path)
 
 
-def file_exists(ressource_nb: int,
-                start_date: str | None,
-                end_date: str | None,
-                eic_code: str | None,
-                production_type: str | None,
-                production_subtype: str | None,
-                metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS,
-                return_csv_name = False
-                ) -> bool:
+def gen_file_exists(ressource_nb: int,
+                    start_date: str | None,
+                    end_date: str | None,
+                    eic_code: str | None,
+                    production_type: str | None,
+                    production_subtype: str | None,
+                    metadata_fields = METADATA_ENERGY_PRODUCTION_FIELDS,
+                    return_csv_name = False
+                    ) -> bool:
     """Return True if the file exists, False otherwise.
     Any file not present in the register is considered as non existing."""
 
@@ -53,6 +53,19 @@ def file_exists(ressource_nb: int,
         return file_exists_bool, csv_name
 
     return file_exists_bool
+
+
+def units_names_file_exists(ressource_nb: int,
+                            root_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
+                            ) -> bool:
+    """Return true if the units names file exists, false
+    otherwise."""
+
+    # Retreive the csv path
+    units_names_path = create_csv_path_units_names(root_data_path,
+                                                   ressource_nb)
+
+    return os.path.isfile(units_names_path)
 
 
 def create_register(fields = METADATA_ENERGY_PRODUCTION_FIELDS,
@@ -197,13 +210,13 @@ def delete_generation_data(ressource_nb: int,
     and remove the corresponding row inside the register accordingly."""
 
     # Determine the existence of the file and recreate the csv file name
-    file_exists_bool, csv_name = file_exists(ressource_nb,
-                                             start_date,
-                                             end_date,
-                                             eic_code,
-                                             production_type,
-                                             production_subtype,
-                                             return_csv_name = True)
+    file_exists_bool, csv_name = gen_file_exists(ressource_nb,
+                                                 start_date,
+                                                 end_date,
+                                                 eic_code,
+                                                 production_type,
+                                                 production_subtype,
+                                                 return_csv_name = True)
 
     # If the file you want to delete does not exists, print an error message
     if not file_exists_bool:

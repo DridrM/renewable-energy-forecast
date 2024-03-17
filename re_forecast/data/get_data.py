@@ -3,16 +3,16 @@ import pandas as pd
 from re_forecast.data.load_data import download_rte_data
 from re_forecast.data.format_data import extract_generation_units, extract_all_generation_values
 from re_forecast.data.store_data import store_to_csv
-from re_forecast.data.manage_data_storage import register_exists, file_exists
-from re_forecast.data.read_data import read_generation_data
+from re_forecast.data.manage_data_storage import register_exists, gen_file_exists, units_names_file_exists
+from re_forecast.data.read_data import read_generation_data, read_units_names_data
 from re_forecast.data.utils import api_delay, call_delay, slice_dates, format_dates
 from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
 
 
-def download_and_format(ressource_nb: int,
-                        start_date: str,
-                        end_date: str
-                        ) -> list:
+def download_and_format_gen_data(ressource_nb: int,
+                                 start_date: str,
+                                 end_date: str
+                                 ) -> list:
     """The download and format function is made to bypass the time range limit for the
     datas you can make for one ressource call. To do that, the time range specified is sliced
     into smaller time ranges that respect the time range limit for the ressource called.
@@ -60,6 +60,24 @@ def download_and_format(ressource_nb: int,
     return generation_values_all
 
 
+def download_and_format_units_names(ressource_nb: int) -> list:
+    """Download RTE data with default API call to extract units names
+    data, return the list of formated units names data."""
+
+    # Download default RTE data for the ressource called
+    data = download_rte_data(ressource_nb,
+                             None,
+                             None,
+                             None,
+                             None,
+                             None)
+
+    # Format the data in order to extract the units names
+    format_units_names_data = extract_generation_units(data, ressource_nb)
+
+    return format_units_names_data
+
+
 @api_delay
 def get_rte_data(ressource_nb: int,
                  start_date: str | None,
@@ -92,9 +110,9 @@ def get_rte_data(ressource_nb: int,
         #############################################################################
         if not register_exists():
             ## Download and format the data. The download and format function will
-            generation_values_all = download_and_format(ressource_nb,
-                                                        start_date,
-                                                        end_date)
+            generation_values_all = download_and_format_gen_data(ressource_nb,
+                                                                 start_date,
+                                                                 end_date)
 
             ## Store the data
             store_to_csv(generation_values_all,
@@ -125,15 +143,15 @@ def get_rte_data(ressource_nb: int,
         #############################################################################
         else:
             # Determine the existence of the file and recreate the csv file name
-            file_exists_bool = file_exists(ressource_nb,
-                                           start_date,
-                                           end_date,
-                                           None,
-                                           None,
-                                           None)
+            gen_file_exists_bool = gen_file_exists(ressource_nb,
+                                                   start_date,
+                                                   end_date,
+                                                   None,
+                                                   None,
+                                                   None)
 
             ## If the dataset file exists, read it and return it filtered
-            if file_exists_bool:
+            if gen_file_exists_bool:
                 # Read the data and return
                 generation_data_filtered = read_generation_data(ressource_nb,
                                                                 start_date,
@@ -148,9 +166,9 @@ def get_rte_data(ressource_nb: int,
             ## If it does not exists, download, format, store and read the data
             else:
                 ## Download and format the data. The download and format function will
-                generation_values_all = download_and_format(ressource_nb,
-                                                            start_date,
-                                                            end_date)
+                generation_values_all = download_and_format_gen_data(ressource_nb,
+                                                                     start_date,
+                                                                     end_date)
 
                 ## Store the data
                 store_to_csv(generation_values_all,
@@ -182,5 +200,45 @@ def get_rte_data(ressource_nb: int,
 
 
 @api_delay
-def get_rte_units_names() -> pd.DataFrame:
-    """"""
+def get_rte_units_names(ressource_nb: int,
+                        ressources_names = {1: "actual_generations_per_production_type",
+                                            2: "actual_generations_per_unit",
+                                            3: "generation_mix_15min_time_scale"},
+                        units_names_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
+                        ) -> pd.DataFrame:
+    """End user and general purpose function used to download, format, store and read
+    the units names from the electricity generation data collected from the RTE API.
+    Return the units names for a given ressource as dataframe."""
+
+    ## First, check if the ressource number is correct
+    if ressource_nb in list(ressources_names.keys()):
+        ## Does the file exists ?
+        units_names_file_exists_bool = units_names_file_exists(ressource_nb)
+
+        ## If the units names file exists, read it
+        if units_names_file_exists_bool:
+            return read_units_names_data(ressource_nb)
+
+        ## If it doesn't, download, format and read it
+        else:
+            # Download and format units names data
+            units_names_data = download_and_format_units_names(ressource_nb)
+
+            # Store the units names data
+            store_to_csv(units_names_data,
+                         units_names_data_path,
+                         ressource_nb,
+                         None,
+                         None,
+                         None,
+                         None,
+                         None,
+                         store_units_names = True)
+
+            return read_units_names_data(ressource_nb)
+
+    ## If the ressource number is not amoung the accepted ressource numbers, print an error message
+    else:
+        print("The ressource number given is incorrect. Here the ressource numbers accepted :\n")
+        for key, value in ressources_names.items():
+            print(f"{value} -> {key}")
