@@ -180,9 +180,9 @@ if __name__ == "__main__":
 
     # Test the function
     read_generation_data(ressource,
-                        start_date,
-                        end_date,
-                        eic_code,
-                        production_type,
-                        production_subtype,
-                        generation_data_path)
+                         start_date,
+                         end_date,
+                         eic_code,
+                         production_type,
+                         production_subtype,
+                         generation_data_path)

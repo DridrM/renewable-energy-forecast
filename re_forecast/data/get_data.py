@@ -6,7 +6,7 @@ from re_forecast.data.store_data import store_to_csv
 from re_forecast.data.manage_data_storage import register_exists, gen_file_exists, units_names_file_exists
 from re_forecast.data.read_data import read_generation_data, read_units_names_data
 from re_forecast.data.utils import api_delay, call_delay, slice_dates, format_dates
-from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
+from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH, RESSOURCES_NAMES
 
 
 def download_and_format_gen_data(ressource_nb: int,
@@ -86,9 +86,7 @@ def get_rte_data(ressource_nb: int,
                  production_type: str | None,
                  production_subtype: str | None,
                  generation_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH,
-                 ressources_names = {1: "actual_generations_per_production_type",
-                                     2: "actual_generations_per_unit",
-                                     3: "generation_mix_15min_time_scale"}
+                 ressources_names = RESSOURCES_NAMES
                  ) -> pd.DataFrame:
     """End user and general purpose function used to download, format, store and read
     the electricity generation data collected from the RTE API. The strategy used to manage the
@@ -201,9 +199,7 @@ def get_rte_data(ressource_nb: int,
 
 @api_delay
 def get_rte_units_names(ressource_nb: int,
-                        ressources_names = {1: "actual_generations_per_production_type",
-                                            2: "actual_generations_per_unit",
-                                            3: "generation_mix_15min_time_scale"},
+                        ressources_names = RESSOURCES_NAMES,
                         units_names_data_path = DATA_CSV_ENERGY_PRODUCTION_PATH
                         ) -> pd.DataFrame:
     """End user and general purpose function used to download, format, store and read

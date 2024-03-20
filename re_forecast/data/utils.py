@@ -2,6 +2,10 @@ import datetime
 import time
 import pandas as pd
 
+from re_forecast.params import (API_START_DATE_LIMITS, API_END_DATE_LIMIT, INPUT_DATETIME_FORMAT, FORMAT_DATE_DATETIME_DELIMITERS,
+                                RESSOURCES_MAXIMAL_TIME_DELTAS, RESSOURCES_DATA_POINT_TIME_SPAN, RESSOURCES_NAMES,
+                                UNITS_NAMES_FILE_PATH_DESIGNATION, UNITS_NAMES_COLS, DEFAULT_END_DATE, PARAMS_COLS_INIT,
+                                RESSOURCES_MINIMAL_CALL_INTERVALS, RESSOURCE_PARAM_NAME)
 
 ####################################################
 # API calls function: params handling for API call #
@@ -38,11 +42,9 @@ def handle_datetime_limits(start_date: str,
                            end_date: str,
                            ressource_nb: int,
                            format_dates_mode: int,
-                           dt_format = "%Y-%m-%d %H:%M:%S",
-                           start_date_limits = {1: datetime.datetime(2014, 12, 15),
-                                                2: datetime.datetime(2011, 12, 13),
-                                                3: datetime.datetime(2017, 1, 1)}, # According to RTE API doc
-                           end_date_limit = datetime.datetime.now()
+                           dt_format = INPUT_DATETIME_FORMAT,
+                           start_date_limits = API_START_DATE_LIMITS,
+                           end_date_limit = API_END_DATE_LIMIT
                            ) -> dict:
     """Handle datetime limits and presence:
     - If at least one date not present: return a dict with 'None' as start and end dates
@@ -129,9 +131,7 @@ def format_time_values(t: int) -> str:
 
 def format_dates(date: datetime.datetime,
                  mode = 0,
-                 delimiters = {0: {"date_time": "T", "tz": "+01:00"},
-                               1: {"date_time": "_", "tz": ""},
-                               2: {"date_time": " ", "tz": ""}}
+                 delimiters = FORMAT_DATE_DATETIME_DELIMITERS
                  ) -> str:
     """Transform a datetime object into a string, with the right
     format accepted by RTE API.
@@ -198,11 +198,9 @@ def handle_params(ressource_nb: int,
 def slice_dates(ressource_nb: int,
                 start_date: str | None,
                 end_date: str | None,
-                dt_format = "%Y-%m-%d %H:%M:%S",
-                ressource_time_delta = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
-                ressource_datapoint_timedelta = {1: datetime.timedelta(hours = 1),
-                                                 2: datetime.timedelta(hours = 1),
-                                                 3: datetime.timedelta(minutes = 15)}
+                dt_format = INPUT_DATETIME_FORMAT,
+                ressource_time_delta = RESSOURCES_MAXIMAL_TIME_DELTAS,
+                ressource_datapoint_timedelta = RESSOURCES_DATA_POINT_TIME_SPAN
                 ) -> list:
     """Transform a time range defined by two dates by a list of sub-ranges, in order
     to respect the limit timedelta ranges asked from the API."""
@@ -310,9 +308,7 @@ def create_csv_path(root_path: str,
                     eic_code: str | None,
                     production_type: str | None,
                     production_subtype: str | None,
-                    ressources_names = {1: "actual_generations_per_production_type",
-                                        2: "actual_generations_per_unit",
-                                        3: "generation_mix_15min_time_scale"},
+                    ressources_names = RESSOURCES_NAMES,
                     return_csv_name = False
                     ) -> str:
     """Create a csv path by adding the root path, the ressource name based on
@@ -353,12 +349,8 @@ def create_csv_path(root_path: str,
 
 def create_csv_path_units_names(root_path: str,
                                 ressource_nb: int,
-                                ressources_names = {1: "actual_generations_per_production_type",
-                                                    2: "actual_generations_per_unit",
-                                                    3: "generation_mix_15min_time_scale"},
-                                units_names = {1: "production_type",
-                                               2: "unit",
-                                               3: "production_type_&_subtype"}
+                                ressources_names = RESSOURCES_NAMES,
+                                units_names = UNITS_NAMES_FILE_PATH_DESIGNATION
                                 ) -> str:
     """Create a csv path specifically for the lists of units names,
     depending on the ressource you have called."""
@@ -379,17 +371,9 @@ def handle_params_storage(ressource_nb: int,
                           eic_code: str | None,
                           production_type: str | None,
                           production_subtype: str | None,
-                          default_ressource_timedelta = {1: datetime.timedelta(hours = 23),
-                                                         2: datetime.timedelta(hours = 23),
-                                                         3: datetime.timedelta(hours = 23, minutes = 45)},
-                          units_names_cols = {1: "production_type",
-                                              2: "eic_code",
-                                              3: "production_subtype"},
-                          storage_params = {"start_date": None,
-                                            "end_date": None,
-                                            "eic_code": None,
-                                            "production_type": None,
-                                            "production_subtype": None}
+                          default_ressource_timedelta = DEFAULT_END_DATE,
+                          units_names_cols = UNITS_NAMES_COLS,
+                          storage_params = PARAMS_COLS_INIT
                           ) -> dict:
     """Handle the consistency of the params used to fill the register and to
     create the csv paths for the downloaded generation datas.
@@ -467,10 +451,8 @@ def handle_params_storage(ressource_nb: int,
 
 
 def api_delay(func,
-              minimal_call_timedeltas = {1: 900,
-                                         2: 3600,
-                                         3: 900},
-              ressource_key = "ressource_nb",
+              minimal_call_timedeltas = RESSOURCES_MINIMAL_CALL_INTERVALS,
+              ressource_key = RESSOURCE_PARAM_NAME,
               calls = list()
               ):
     """Decorator that block the execution of a API related function
@@ -507,9 +489,7 @@ def api_delay(func,
 
 
 def call_delay(ressource_nb: int,
-               ressource_call_delays = {1: 900,
-                                        2: 3600,
-                                        3: 900}
+               ressource_call_delays = RESSOURCES_MINIMAL_CALL_INTERVALS
                ) -> None:
     """Delay consecutive calls of the API with time.sleep,
     depending on the ressource called."""
