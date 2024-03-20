@@ -217,7 +217,8 @@ def get_rte_units_names(ressource_nb: int,
 
         ## If the units names file exists, read it
         if units_names_file_exists_bool:
-            return read_units_names_data(ressource_nb)
+            return read_units_names_data(ressource_nb,
+                                         units_names_data_path)
 
         ## If it doesn't, download, format and read it
         else:
@@ -235,7 +236,8 @@ def get_rte_units_names(ressource_nb: int,
                          None,
                          store_units_names = True)
 
-            return read_units_names_data(ressource_nb)
+            return read_units_names_data(ressource_nb,
+                                         units_names_data_path)
 
     ## If the ressource number is not amoung the accepted ressource numbers, print an error message
     else:
