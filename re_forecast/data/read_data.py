@@ -1,6 +1,6 @@
 import pandas as pd
 
-from re_forecast.data.utils import create_csv_path, handle_params_presence, handle_params_presence_read_mode
+from re_forecast.data.utils import create_csv_path, create_csv_path_units_names, handle_params_presence, handle_params_presence_read_mode
 from re_forecast.params import DATA_CSV_ENERGY_PRODUCTION_PATH
 
 
@@ -155,6 +155,18 @@ def read_generation_data(ressource_nb: int,
     return generation_data_filtered
 
 
+def read_units_names_data(ressource_nb: int,
+                          units_names_data_path: str
+                          ) -> pd.DataFrame:
+    """Read the units names file for a given ressource"""
+
+    # Retreive the csv path
+    units_names_path = create_csv_path_units_names(units_names_data_path,
+                                                   ressource_nb)
+
+    return pd.read_csv(units_names_path)
+
+
 if __name__ == "__main__":
     # Set all the params
     ressource = 1
@@ -168,9 +180,9 @@ if __name__ == "__main__":
 
     # Test the function
     read_generation_data(ressource,
-                        start_date,
-                        end_date,
-                        eic_code,
-                        production_type,
-                        production_subtype,
-                        generation_data_path)
+                         start_date,
+                         end_date,
+                         eic_code,
+                         production_type,
+                         production_subtype,
+                         generation_data_path)

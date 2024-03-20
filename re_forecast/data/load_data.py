@@ -1,14 +1,13 @@
 import requests
 
-
 from re_forecast.data.utils import handle_params
 from re_forecast.params import BASE_URL, RESSOURCE_AUTH, RESSOURCE_1, RESSOURCE_2, RESSOURCE_3, CONTENT_TYPE, CLIENT_SECRET
 
 
 def collect_rte_token(base_url: str,
-                  ressource: str,
-                  content_type: str,
-                  client_secret: str) -> dict:
+                      ressource: str,
+                      content_type: str,
+                      client_secret: str) -> dict:
     """Query the (RTE) API with POST to collect an access token"""
 
     # Construct the url
@@ -67,7 +66,7 @@ def download_rte_data(ressource_nb: int,
     hangling presence, time limits and formating) and the final RTE API query.
     Notes:
     - For the dates, please use this format: 'YYYY-MM-DD hh:mm:ss'
-    - For the eic code and the prod type, please refer to the dates (for now)
+    - For the eic code and the prod type, please refer to the API documentation
     """
 
     # Collect the rte access token
@@ -94,22 +93,3 @@ def download_rte_data(ressource_nb: int,
                          params = params)
 
     return data
-
-
-# def download_rte_data_without_limits(ressource_nb: int,
-#                                      start_date = None,
-#                                      eic_code = None,
-#                                      production_type = None,
-#                                      production_subtype = None,
-#                                      ressources_urls = {1: RESSOURCE_1,
-#                                                         2: RESSOURCE_2,
-#                                                         3: RESSOURCE_3},
-#                                      ) -> dict:
-#     """"""
-
-#     # Slice the dates with the slice dates function
-
-
-#     # Iterate over the slice dates dict
-#     # Space each iteration with a time.sleep to respect the time interval at which
-#     # you call the API
