@@ -98,7 +98,7 @@ FORMAT_DATE_DATETIME_DELIMITERS = {0: {"date_time": "T", "tz": "+01:00"},
                                    2: {"date_time": " ", "tz": ""}}
 
 # Maximal number of days depending on the ressource requested
-RESSOURCES_MAXIMAL_TIME_DELTAS = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
+RESSOURCES_MAXIMAL_TIME_DELTAS = {1: 155, 2: 7, 3: 14} # According to RTE API doc
 
 # Time span of one data point depending on the ressource call
 RESSOURCES_DATA_POINT_TIME_SPAN = {1: datetime.timedelta(hours = 1),
@@ -135,7 +135,7 @@ PARAMS_COLS_INIT = {"start_date": None,
 # 3/ Parameters for the functions used in the get_data module
 
 # Minimal intervals between two consecutive API calls depending on the ressource requested
-RESSOURCES_MINIMAL_CALL_INTERVALS = {1: 900, 2: 3600, 3: 900}
+RESSOURCES_MINIMAL_CALL_INTERVALS = {1: 900, 2: 900, 3: 900}
 
 # Ressource key used in the api_delay decorator to adapt wait time depending on the ressource
 RESSOURCE_PARAM_NAME = "ressource_nb"

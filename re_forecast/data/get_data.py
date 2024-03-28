@@ -204,7 +204,8 @@ def get_rte_units_names(ressource_nb: int,
                         ) -> pd.DataFrame:
     """End user and general purpose function used to download, format, store and read
     the units names from the electricity generation data collected from the RTE API.
-    Return the units names for a given ressource as dataframe."""
+    Return the units names for a given ressource as dataframe.
+    Note: Fill the function arguments as key words arguments, due to the api_delay decorator."""
 
     ## First, check if the ressource number is correct
     if ressource_nb in list(ressources_names.keys()):
