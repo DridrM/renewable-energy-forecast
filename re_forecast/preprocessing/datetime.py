@@ -69,7 +69,8 @@ def format_to_datetime(gen_df: pd.DataFrame,
 
 def construct_time_consistent_df(gen_df: pd.DataFrame,
                                  dt_columns: list, # start_date or/and end_date columns, not updated date column
-                                 freq = "1H"
+                                 freq = "1H",
+                                 dt_columns_all = ["start_date", "end_date", "updated_date"]
                                  ) -> pd.DataFrame:
     """Merge the given df with a datetime column without missing values.
     The datetime column take the start date from the existing datetime column in the df,
@@ -81,8 +82,8 @@ def construct_time_consistent_df(gen_df: pd.DataFrame,
     Params:
     - freq: time step between each datetime point in order to construct a consistent datetime column"""
 
-    # /!\ Copy the df
-    gen_df = gen_df.copy(deep = True)
+    # Format to datetime the df
+    gen_df_dt = format_to_datetime(gen_df, dt_columns_all)
 
     # Instanciate a list "date_cols_complete" to fill wit the names of complete
     # datetime columns. We will use this list for the following merge
@@ -93,8 +94,8 @@ def construct_time_consistent_df(gen_df: pd.DataFrame,
         # 1/ Create the reference datetime serie
 
         # Collect start and end date of the date col
-        start = gen_df[date_col].min()
-        end = gen_df[date_col].max()
+        start = gen_df_dt[date_col].min()
+        end = gen_df_dt[date_col].max()
 
         # Create the datetime index
         dt_index = pd.date_range(start, end, freq = freq)
@@ -112,14 +113,14 @@ def construct_time_consistent_df(gen_df: pd.DataFrame,
     # 2/ Compare the date_complete columns with the choosen date columns in gen_df
 
     # Merge date_complete df with gen_df
-    gen_df = pd.merge(left = date_complete, right = gen_df, left_on = date_cols_complete, right_on = dt_columns, how = "left")
+    gen_df_dt = pd.merge(left = date_complete, right = gen_df_dt, left_on = date_cols_complete, right_on = dt_columns, how = "left")
 
-    return gen_df
+    return gen_df_dt
 
 
 def check_dates_consistency(gen_df: pd.DataFrame,
                             date_col: str,
-                            int_missing_dates = False # Output missing dates indicator as int 0 or 1 if True
+                            missing_dates_keys = None # Example: {"missing": 1, "non-missing": 0}
                             ) -> pd.DataFrame:
     """Output a df with a complete datetime column, and missing_dates column that
     indicate if the date in the original df is present (False or 0) or missing (True or 1)
@@ -127,7 +128,8 @@ def check_dates_consistency(gen_df: pd.DataFrame,
     - gen_df: the df we want to check time consistency (missing dates)
     - date_col: the name of the datetime column we take for reference in time consistency
     Params:
-    - int_missing_dates: format the indicator column to int 0 or 1"""
+    - missing_dates_keys: dict that indicate in which format you want to indicate 'missing' or 'non-missing'.
+    Example: {"missing": 1, "non-missing": 0}"""
 
     # Construct a df with complete dates
     gen_complete_df = construct_time_consistent_df(gen_df, [date_col])
@@ -136,11 +138,34 @@ def check_dates_consistency(gen_df: pd.DataFrame,
     missing_dates = gen_complete_df[date_col].isnull()
 
     # Case user want the output missing dates indicator as being int 0 or 1
-    if int_missing_dates:
-        missing_dates = missing_dates.apply(lambda x: 1 if x else 0)
+    if missing_dates_keys:
+        missing_dates = missing_dates.apply(lambda x: missing_dates_keys["missing"] if x else missing_dates_keys["non-missing"])
 
     return pd.DataFrame({f"{date_col}_complete": gen_complete_df[f"{date_col}_complete"],
                          "missing_dates": missing_dates})
+
+
+def plot_missing_dates_repartition(gen_df: pd.DataFrame,
+                                   date_col: str
+                                   ) -> None:
+    """Plot a barplot of the repartition of the 'missing' and 'non-missing data
+    of the given df, for its given datetime column.
+    Arguments:
+    - gen_df: dataframe with a datetime column
+    - date_col: the name of the datetime column"""
+
+    # Create the missing dates df
+    missing_dates_df = check_dates_consistency(gen_df,
+                                               date_col,
+                                               missing_dates_keys = {"missing": "missing", "non-missing": "non-missing"}
+                                               )
+
+    # Plot the repartition of missing and non missing datas
+    plt.figure(figsize = (10, 10))
+    ax = plt.axes()
+    ax.set_title("Repartition of missing and non missing datas")
+    missing_dates_df["missing_dates"].value_counts(normalize = True).plot(kind = "bar", ax = ax)
+    plt.show()
 
 
 def count_consecutive_time_periods(gen_df: pd.DataFrame,
@@ -155,7 +180,8 @@ def count_consecutive_time_periods(gen_df: pd.DataFrame,
     # Create the missing dates df
     missing_dates_df = check_dates_consistency(gen_df,
                                                date_col,
-                                               int_missing_dates = True)
+                                               missing_dates_keys = {"missing": 1, "non-missing": 0}
+                                               )
 
     # Add the column that give each "0" or "1" cluster an unique id
     # The diff method check the diffence with the previous row
