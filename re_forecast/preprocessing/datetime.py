@@ -52,11 +52,14 @@ def format_to_datetime(gen_df: pd.DataFrame,
     - gen_df: the df which we want to transform the datetime columns
     - dt_columns: a list of names of datetime columns to transform"""
 
+    # /!\ Copy the df
+    gen_df = gen_df.copy(deep = True)
+
     # Iterate over the datetime columns
     for dt_column in dt_columns:
         try:
             # Handle summer and winter time and transform to datetime the column
-            gen_df[dt_column] = gen_df[dt_column].apply(handle_seasonal_time)
+            gen_df.loc[:, dt_column] = gen_df[dt_column].apply(handle_seasonal_time)
 
         except ValueError as e:
             print(e)
@@ -77,6 +80,9 @@ def construct_time_consistent_df(gen_df: pd.DataFrame,
     - dt_columns: the list of datetime columns you want to complete
     Params:
     - freq: time step between each datetime point in order to construct a consistent datetime column"""
+
+    # /!\ Copy the df
+    gen_df = gen_df.copy(deep = True)
 
     # Instanciate a list "date_cols_complete" to fill wit the names of complete
     # datetime columns. We will use this list for the following merge

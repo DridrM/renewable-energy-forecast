@@ -139,3 +139,6 @@ RESSOURCES_MINIMAL_CALL_INTERVALS = {1: 900, 2: 900, 3: 900}
 
 # Ressource key used in the api_delay decorator to adapt wait time depending on the ressource
 RESSOURCE_PARAM_NAME = "ressource_nb"
+
+# State of the bypass for the api_delay function. If False, the delay is applied. If false, it is not applied
+API_DELAY_BYPASS = True
