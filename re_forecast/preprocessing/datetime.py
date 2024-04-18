@@ -145,29 +145,6 @@ def check_dates_consistency(gen_df: pd.DataFrame,
                          "missing_dates": missing_dates})
 
 
-def plot_missing_dates_repartition(gen_df: pd.DataFrame,
-                                   date_col: str
-                                   ) -> None:
-    """Plot a barplot of the repartition of the 'missing' and 'non-missing data
-    of the given df, for its given datetime column.
-    Arguments:
-    - gen_df: dataframe with a datetime column
-    - date_col: the name of the datetime column"""
-
-    # Create the missing dates df
-    missing_dates_df = check_dates_consistency(gen_df,
-                                               date_col,
-                                               missing_dates_keys = {"missing": "missing", "non-missing": "non-missing"}
-                                               )
-
-    # Plot the repartition of missing and non missing datas
-    plt.figure(figsize = (10, 10))
-    ax = plt.axes()
-    ax.set_title("Repartition of missing and non missing datas")
-    missing_dates_df["missing_dates"].value_counts(normalize = True).plot(kind = "bar", ax = ax)
-    plt.show()
-
-
 def count_consecutive_time_periods(gen_df: pd.DataFrame,
                                   date_col: str
                                   ) -> pd.DataFrame:
@@ -202,39 +179,3 @@ def count_consecutive_time_periods(gen_df: pd.DataFrame,
     consecutive_time_periods_df = consecutive_time_periods_df.join(value_count)
 
     return consecutive_time_periods_df
-
-
-def plot_consecutive_time_periods(gen_df: pd.DataFrame,
-                                  date_col: str
-                                  ) -> None:
-    """Plot the distribution of consecutive time periods for missing and non
-    missing dates of the given df, for its given datetime column.
-    Arguments:
-    - gen_df: dataframe with a datetime column
-    - date_col: the name of the datetime column"""
-
-    # Compute the consecutuve time periods df
-    consecutive_time_periods_df = count_consecutive_time_periods(gen_df, date_col)
-
-    # Filter for missing and non missing dates
-    consecutive_missing_dates = consecutive_time_periods_df\
-        .loc[consecutive_time_periods_df["value"] == 1, "count"].to_list() # "1" correspond to missing dates
-    consecutive_non_missing_dates = consecutive_time_periods_df\
-        .loc[consecutive_time_periods_df["value"] == 0, "count"].to_list() # "0" correspond to non missing dates
-
-    # Plot the result
-    plt.figure(figsize = (18, 10))
-
-    # Plot repartition of missing dates
-    ax = plt.subplot(1, 2, 1)
-    ax.set_title("Consecutive missing dates")
-    ax.set_xlabel("Duration of consecutive missing date in hour")
-    sns.histplot(x = consecutive_missing_dates, ax = ax)
-
-    # Plot the repartition of non missing dates
-    ax = plt.subplot(1, 2, 2)
-    ax.set_title("Consecutive non missing dates")
-    ax.set_xlabel("Duration of consecutive non missing date in hour")
-    sns.histplot(x = consecutive_non_missing_dates, ax = ax)
-
-    plt.show()
