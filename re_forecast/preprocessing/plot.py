@@ -99,7 +99,7 @@ def plot_time_serie(gen_df: pd.DataFrame,
     days = (end - start).days
 
     # Add vertical lines separating days
-    for day in range(days):
+    for day in range(1, days + 1):
         # Add iteratively one day to the start day
         dt_day = start + datetime.timedelta(days = day)
 
