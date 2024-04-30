@@ -146,8 +146,8 @@ def check_dates_consistency(gen_df: pd.DataFrame,
 
 
 def count_consecutive_time_periods(gen_df: pd.DataFrame,
-                                  date_col: str
-                                  ) -> pd.DataFrame:
+                                   date_col: str
+                                   ) -> pd.DataFrame:
     """Construct the distribution of consecutive time periods for missing and non
     missing dates of the given df, for its given datetime column.
     Arguments:
