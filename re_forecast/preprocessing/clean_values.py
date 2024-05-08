@@ -30,6 +30,36 @@ def peel_time_serie_df(gen_df: pd.DataFrame,
     return gen_df
 
 
+def set_min_max_limits_time_serie(gen_df: pd.DataFrame,
+                                  value_col: str,
+                                  min_value: float | None = None,
+                                  max_value: float | None = None
+                                  ) -> pd.DataFrame:
+    """Limits min and max values of a time serie df.
+    Arguments:
+    - gen_df: A consistent time serie df with one or more complete datetime columns
+    and one value column
+    - value_col: the name of the value column
+    - min_value: minimum limit value
+    - max_value: maximum limit value
+    """
+
+    # Copy the gen_df to avoid the setting with copy warning
+    gen_df_copy = gen_df.copy(deep = True)
+
+    # Replace values bellow min_value by min_value
+    if isinstance(min_value, (int, float)):
+        min_values = gen_df_copy.loc[gen_df_copy[value_col] < min_value, value_col].values
+        gen_df_copy.replace({value: min_value for value in min_values}, inplace = True)
+
+    # Replace values above max_value by max_value
+    if isinstance(max_value, (int, float)):
+        max_values = gen_df_copy.loc[gen_df_copy[value_col] > max_value, value_col].values
+        gen_df_copy.replace({value: max_value for value in max_values}, inplace = True)
+
+    return gen_df_copy
+
+
 class NormalScaler:
 
     def __init__(self):
