@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
-from re_forecast.preprocessing.datetime import check_dates_consistency, count_consecutive_time_periods
-
+from re_forecast.preprocessing.handle_datetime import check_dates_consistency, count_consecutive_time_periods
 
 
 def plot_missing_dates_repartition(gen_df: pd.DataFrame,
