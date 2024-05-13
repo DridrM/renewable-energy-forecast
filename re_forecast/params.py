@@ -75,9 +75,9 @@ METADATA_ENERGY_PRODUCTION_FIELDS = {1: 'creation_date',
 DATA_CSV_METEO_PATH = os.environ.get("DATA_CSV_METEO_PATH")
 
 
-################
-# Utils module #
-################
+#####################
+# Data utils module #
+#####################
 
 # 1/ Parameters for the functions used in the load_data module
 
@@ -142,3 +142,11 @@ RESSOURCE_PARAM_NAME = "ressource_nb"
 
 # State of the bypass for the api_delay function. If False, the delay is applied. If false, it is not applied
 API_DELAY_BYPASS = True
+
+
+###########################################
+# Preprocessing Check data quality module #
+###########################################
+
+# Quality thresholds that the time serie dataset must respects
+DATA_QUALITY_THRESHOLDS = {"row_nb": 1000, "prop_missing_values": 0.3, "max_empty_gap_duration": 50}

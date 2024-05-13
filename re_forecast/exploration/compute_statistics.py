@@ -9,6 +9,71 @@ from scipy.special import kl_div
 from sklearn.neighbors import KernelDensity
 from sklearn.preprocessing import MinMaxScaler
 
+from re_forecast.preprocessing.handle_datetime import construct_time_consistent_df
+
+
+def check_dates_consistency(gen_df: pd.DataFrame,
+                            date_col: str,
+                            missing_dates_keys = None # Example: {"missing": 1, "non-missing": 0}
+                            ) -> pd.DataFrame:
+    """Output a df with a complete datetime column, and missing_dates column that
+    indicate if the date in the original df is present (False or 0) or missing (True or 1)
+    Arguments:
+    - gen_df: the df we want to check time consistency (missing dates)
+    - date_col: the name of the datetime column we take for reference in time consistency
+    Params:
+    - missing_dates_keys: dict that indicate in which format you want to indicate 'missing' or 'non-missing'.
+    Example: {"missing": 1, "non-missing": 0}"""
+
+    # Construct a df with complete dates
+    gen_complete_df = construct_time_consistent_df(gen_df, [date_col])
+
+    # Return a serie that map every missing date on the complete timeline
+    missing_dates = gen_complete_df[date_col].isnull()
+
+    # Case user want the output missing dates indicator as being int 0 or 1
+    if missing_dates_keys:
+        missing_dates = missing_dates.apply(lambda x: missing_dates_keys["missing"] if x else missing_dates_keys["non-missing"])
+
+    return pd.DataFrame({f"{date_col}_complete": gen_complete_df[f"{date_col}_complete"],
+                         "missing_dates": missing_dates})
+
+
+def count_consecutive_time_periods(gen_df: pd.DataFrame,
+                                   date_col: str
+                                   ) -> pd.DataFrame:
+    """Construct the distribution of consecutive time periods for missing and non
+    missing dates of the given df, for its given datetime column.
+    Arguments:
+    - gen_df: dataframe with a datetime column
+    - date_col: the name of the datetime column"""
+
+    # Create the missing dates df
+    missing_dates_df = check_dates_consistency(gen_df,
+                                               date_col,
+                                               missing_dates_keys = {"missing": 1, "non-missing": 0}
+                                               )
+
+    # Add the column that give each "0" or "1" cluster an unique id
+    # The diff method check the diffence with the previous row
+    # The ne method output true when the difference is not 0
+    # The cumsum method is just a cumulative sum
+    missing_dates_df["consecutive_group_id"] = missing_dates_df["missing_dates"].diff().ne(0).cumsum()
+
+    # Create the consecutive time periods df
+    # This df show what is the consecutive value of each group/cluster
+    consecutive_time_periods_df = missing_dates_df\
+        .groupby("consecutive_group_id")["missing_dates"]\
+        .min().to_frame(name = "value")
+
+    # We create a serie that compute the number of consecutive values in each group/cluster
+    value_count = missing_dates_df.groupby("consecutive_group_id")["missing_dates"].count().rename("count")
+
+    # Join the serie and the consecutive time periods df
+    consecutive_time_periods_df = consecutive_time_periods_df.join(value_count)
+
+    return consecutive_time_periods_df
+
 
 def compute_kde_time_serie(gen_df: pd.DataFrame,
                            value_col: str,
