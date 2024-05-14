@@ -1,6 +1,8 @@
 import datetime
 import pandas as pd
 
+from re_forecast.params import DATE_TIME_COLUMNS
+
 
 def handle_seasonal_time(date_str: str,
                          winter_time_flag = "+01:00",
@@ -51,24 +53,24 @@ def format_to_datetime(gen_df: pd.DataFrame,
     - dt_columns: a list of names of datetime columns to transform"""
 
     # /!\ Copy the df
-    gen_df = gen_df.copy(deep = True)
+    gen_df_copy = gen_df.copy(deep = True)
 
     # Iterate over the datetime columns
     for dt_column in dt_columns:
         try:
             # Handle summer and winter time and transform to datetime the column
-            gen_df.loc[:, dt_column] = gen_df[dt_column].apply(handle_seasonal_time)
+            gen_df_copy.loc[:, dt_column] = gen_df_copy[dt_column].apply(handle_seasonal_time)
 
         except ValueError as e:
             print(e)
 
-    return gen_df
+    return gen_df_copy
 
 
 def construct_time_consistent_df(gen_df: pd.DataFrame,
                                  dt_columns: list, # start_date or/and end_date columns, not updated date column
                                  freq = "1H",
-                                 dt_columns_all = ["start_date", "end_date", "updated_date"]
+                                 dt_columns_all = DATE_TIME_COLUMNS
                                  ) -> pd.DataFrame:
     """Merge the given df with a datetime column without missing values.
     The datetime column take the start date from the existing datetime column in the df,

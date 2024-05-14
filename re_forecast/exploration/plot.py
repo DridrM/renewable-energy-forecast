@@ -26,7 +26,7 @@ def plot_missing_dates_repartition(gen_df: pd.DataFrame,
     plt.figure(figsize = (10, 10))
     ax = plt.axes()
     ax.set_title("Repartition of missing and non missing datas")
-    missing_dates_df["missing_dates"].value_counts(normalize = True).plot(kind = "bar", ax = ax)
+    missing_dates_df.value_counts("missing_dates", normalize = True).plot(kind = "bar", ax = ax)
     plt.show()
 
 
