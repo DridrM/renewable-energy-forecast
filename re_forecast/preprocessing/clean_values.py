@@ -60,9 +60,34 @@ def set_min_max_limits_time_serie(gen_df: pd.DataFrame,
     return gen_df_copy
 
 
-class NormalScaler:
+class BaseTsScaler:
+    """The BaseTsScaler is only used to avoid implementing
+    a fit_transform method each time for each Ts scalers
+    objects."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        pass
+
+    def fit(self, *args) -> None:
+        return
+
+    def transform(self, *args) -> None:
+        return
+
+    def fit_transform(self, *args) -> any:
+        """The fit_transform method to be inherited
+        by the child objects."""
+
+        # Fit
+        self.fit(*args)
+
+        # Transform
+        return self.transform(*args)
+
+
+class NormalScalerTs(BaseTsScaler):
+
+    def __init__(self) -> None:
         """Initialize self.mean, self.std and the
         error message used in case of error handling."""
 
@@ -72,7 +97,7 @@ class NormalScaler:
         # Create the error message
         self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
-    def fit(self, gen_df: pd.DataFrame):
+    def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the mean and the std of a time serie df
         Arguments:
         - gen_df: df with one column value and a datetime index"""
@@ -92,18 +117,6 @@ class NormalScaler:
         # Normalize the df
         return (gen_df - self.mean) / self.std
 
-    def fit_transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
-        """Extract the mean and the std of a time serie df and
-        normalize the time serie.
-        Arguments:
-        - gen_df: df with one column value and a datetime index"""
-
-        # Fit
-        self.fit(gen_df)
-
-        # Transform: Normalization
-        return self.transform(gen_df)
-
     def inverse_transform(self, gen_df_normalized: pd.DataFrame) -> pd.DataFrame:
         """Inverse normalize the time serie.
         Arguments:
@@ -118,11 +131,14 @@ class NormalScaler:
         return gen_df_normalized * self.std + self.mean
 
 
-class Stationarizer:
+class StationarizerTs(BaseTsScaler):
 
-    def __init__(self):
+    def __init__(self, order: int = 0) -> None:
         """Set the initial_values list and the error message for
         the error handling in the inverse transform method"""
+
+        # Init the order of diferenciation
+        self.order = order
 
         # Initialize the list of the initial values
         # This list store the initial values and their index
@@ -133,24 +149,26 @@ class Stationarizer:
         # Initialize the error message for the exception handling of the inverse transform function
         self.error_message = "The inverse_transform method cannot be called before the transform method"
 
-    def transform(self,
-                  gen_df: pd.DataFrame,
-                  order: int
-                  ) -> pd.DataFrame:
+    def fit(self) -> None:
+        """Define the fit method in order to the inherited
+        fit_transform method to work properly"""
+
+        return
+
+    def transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
         """Stationarize the time serie by the order given.
         Arguments:
-        - gen_df: df with one column value and a datetime index
-        - order: the order of the derivation of the time serie"""
+        - gen_df: df with one column value and a datetime index"""
 
         # Copy the original df
         gen_df_diff = gen_df.copy(deep = True)
 
         # Case order == 0, just return the copy
-        if not order:
+        if not self.order:
             return gen_df_diff
 
         # Iterate over the order of the derivative
-        for _ in range(order):
+        for _ in range(self.order):
 
             # 1/ Extract the id of the initial value and the initial value and store them into initial values list #
 
@@ -200,11 +218,14 @@ class Stationarizer:
         return gen_df_undiff
 
 
-class VolatilityRemover:
+class VolatilityRemoverTs(BaseTsScaler):
 
-    def __init__(self):
+    def __init__(self, window_size: int = 1) -> None:
         """Initialize self.volatility and the
         error message used in case of error handling."""
+
+        # Init the window size
+        self.window_size = window_size
 
         # Set the volatility to 0, for the error handling
         self.volatility = 0
@@ -212,17 +233,14 @@ class VolatilityRemover:
         # Set the error message
         self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
-    def fit(self,
-            gen_df: pd.DataFrame,
-            window_size: int
-            ):
+    def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the seasonal volatility of a time serie df
         Arguments:
         - gen_df: df with one column value and a datetime index
         - window_size: size of the window for the rolling standard deviation"""
 
         # Compute the volatility
-        self.volatility = gen_df.rolling(window_size).std().bfill()
+        self.volatility = gen_df.rolling(self.window_size).std().bfill()
 
     def transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
         """Remove the volatility of the time serie.
@@ -236,23 +254,7 @@ class VolatilityRemover:
         # Remove the volatility from the original dataframe
         return gen_df / self.volatility
 
-    def fit_transform(self,
-                      gen_df: pd.DataFrame,
-                      window_size: int
-                      ) -> pd.DataFrame:
-        """Extract the seasonal volatility of a time serie df and
-        remove the volatility of the time serie.
-        Arguments:
-        - gen_df: df with one column value and a datetime index
-        - window_size: size of the window for the rolling standard deviation"""
-
-        # Fit
-        self.fit(gen_df, window_size)
-
-        # Transform: Remove volatility
-        return self.transform(gen_df)
-
-    def inverse_transform(self, gen_df: pd.DataFrame):
+    def inverse_transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
         """Re-add the volatility to the time serie.
         Arguments:
         - gen_df: df without volatility with one column value
@@ -266,11 +268,14 @@ class VolatilityRemover:
         return gen_df * self.volatility
 
 
-class AverageSeasonalityRemover:
+class AverageSeasonalityRemoverTs(BaseTsScaler):
 
-    def __init__(self):
+    def __init__(self, window_size: int = 1) -> None:
         """Initialize self.avg_seasonality and the
         error message used in case of error handling."""
+
+        # Init the window_size
+        self.window_size = window_size
 
         # Set the avg_seasonality to 0, for the error handling
         self.avg_seasonality = 0
@@ -278,17 +283,14 @@ class AverageSeasonalityRemover:
         # Set the error message
         self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
-    def fit(self,
-            gen_df: pd.DataFrame,
-            window_size: int
-            ):
+    def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the seasonal avg_seasonality of a time serie df
         Arguments:
         - gen_df: df with one column value and a datetime index
         - window_size: size of the window for the rolling standard deviation"""
 
         # Compute the avg_seasonality
-        self.avg_seasonality = gen_df.rolling(window_size).mean().bfill()
+        self.avg_seasonality = gen_df.rolling(self.window_size).mean().bfill()
 
     def transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
         """Remove the avg_seasonality of the time serie.
@@ -302,23 +304,7 @@ class AverageSeasonalityRemover:
         # Remove the avg_seasonality from the original dataframe
         return gen_df - self.avg_seasonality
 
-    def fit_transform(self,
-                      gen_df: pd.DataFrame,
-                      window_size: int
-                      ) -> pd.DataFrame:
-        """Extract the seasonal avg_seasonality of a time serie df and
-        remove the avg_seasonality of the time serie.
-        Arguments:
-        - gen_df: df with one column value and a datetime index
-        - window_size: size of the window for the rolling standard deviation"""
-
-        # Fit
-        self.fit(gen_df, window_size)
-
-        # Transform: Remove avg_seasonality
-        return self.transform(gen_df)
-
-    def inverse_transform(self, gen_df: pd.DataFrame):
+    def inverse_transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
         """Re-add the avg_seasonality to the time serie.
         Arguments:
         - gen_df: df without avg_seasonality with one column value
