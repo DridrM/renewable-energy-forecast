@@ -1,10 +1,11 @@
 import pandas as pd
 
 from re_forecast.exceptions import NotFittedError, NotTransformedError
+from re_forecast.params import PEELED_DF_KEEPED_COLUMNS
 
 
 def peel_time_serie_df(gen_df: pd.DataFrame,
-                       keeped_columns = {"dt_column": "start_date_complete", "value_column": "value"}
+                       keeped_columns = PEELED_DF_KEEPED_COLUMNS
                        ) -> pd.DataFrame:
     """Drop all columns appart the choosen value column and the choosen
     datetime column

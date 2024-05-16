@@ -163,7 +163,15 @@ DATE_TIME_COLUMNS = ["start_date", "end_date", "updated_date"]
 ###########################################
 
 # Quality thresholds that the time serie dataset must respects, the name of their check function
-#  and their message (why they don't respect the quality check)
+# and their message (why they don't respect the quality check)
 DATA_QUALITY_THRESHOLDS = {"row_nb": (1000, "check_nb_row", "Unsufficient number of rows"),
                            "prop_missing_values": (0.3, "check_missing_values_prop", "Too many missing values in proportion"),
                            "max_empty_gap_duration": (50, "check_max_empty_gap_duration", "Max empty values gap duration above 50 hours")}
+
+
+##############################
+# Preprocessing Clean values #
+##############################
+
+# Columns to keep for the peeled_df function
+PEELED_DF_KEEPED_COLUMNS = {"dt_column": "start_date_complete", "value_column": "value"}
