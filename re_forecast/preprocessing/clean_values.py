@@ -67,7 +67,9 @@ class BaseTsScaler:
     objects."""
 
     def __init__(self) -> None:
-        pass
+
+        # Create the error message
+        self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
     def fit(self, *args) -> None:
         return
@@ -92,11 +94,11 @@ class NormalScalerTs(BaseTsScaler):
         """Initialize self.mean, self.std and the
         error message used in case of error handling."""
 
+        # Bring back the arguments defined inside the inherited init method
+        super().__init__()
+
         # Create null std and mean
         self.mean, self.std = (0, 0)
-
-        # Create the error message
-        self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
     def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the mean and the std of a time serie df
@@ -138,6 +140,9 @@ class StationarizerTs(BaseTsScaler):
         """Set the initial_values list and the error message for
         the error handling in the inverse transform method"""
 
+        # Bring back the arguments defined inside the inherited init method
+        super().__init__()
+
         # Init the order of diferenciation
         self.order = order
 
@@ -147,10 +152,7 @@ class StationarizerTs(BaseTsScaler):
         # inverse transform method
         self.initial_values = list()
 
-        # Initialize the error message for the exception handling of the inverse transform function
-        self.error_message = "The inverse_transform method cannot be called before the transform method"
-
-    def fit(self) -> None:
+    def fit(self, gen_df: pd.DataFrame) -> None:
         """Define the fit method in order to the inherited
         fit_transform method to work properly"""
 
@@ -225,14 +227,14 @@ class VolatilityRemoverTs(BaseTsScaler):
         """Initialize self.volatility and the
         error message used in case of error handling."""
 
+        # Bring back the arguments defined inside the inherited init method
+        super().__init__()
+
         # Init the window size
         self.window_size = window_size
 
         # Set the volatility to 0, for the error handling
         self.volatility = 0
-
-        # Set the error message
-        self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
     def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the seasonal volatility of a time serie df
@@ -275,14 +277,14 @@ class AverageSeasonalityRemoverTs(BaseTsScaler):
         """Initialize self.avg_seasonality and the
         error message used in case of error handling."""
 
+        # Bring back the arguments defined inside the inherited init method
+        super().__init__()
+
         # Init the window_size
         self.window_size = window_size
 
         # Set the avg_seasonality to 0, for the error handling
         self.avg_seasonality = 0
-
-        # Set the error message
-        self.error_message = "The fit method must be called before the transform and the inverse_transform method"
 
     def fit(self, gen_df: pd.DataFrame) -> None:
         """Extract the seasonal avg_seasonality of a time serie df
@@ -317,3 +319,82 @@ class AverageSeasonalityRemoverTs(BaseTsScaler):
 
         # Multiply by the avg_seasonality
         return gen_df + self.avg_seasonality
+
+
+class PipelineTs(BaseTsScaler):
+
+    def __init__(self, scalers: list[tuple]) -> None:
+        """Set the scalers list of tuples and the scalers_list
+        to store fitted scaler instances."""
+
+        # Bring back the arguments defined inside the inherited init method
+        super().__init__()
+
+        # List of tuples containing the name of the pipeline step, the scaler
+        # object and the parameters of this object in form of a dict
+        self.scalers = scalers
+
+        # List where to store fitted scaler instances
+        self.scalers_list = list()
+
+    def fit(self, gen_df: pd.DataFrame) -> None:
+        """Apply the fit methods from the scaler objects
+        iteratively to the time serie df.
+        Arguments:
+        - gen_df: gen_df: df with one column value and a datetime index"""
+
+        # Iterate over the scaler tuples
+        for scaler in self.scalers:
+            # Unpack the step name, the scaler object and the params
+            # from the scaler tuple
+            step_name, scaler_object, kwargs = scaler
+
+            # Instanciate the curent scaler object
+            scaler_instance = scaler_object(**kwargs)
+
+            # Fit the scaler instance
+            scaler_instance.fit(gen_df)
+
+            # Add the fitted scaler instance to the scalers_list
+            self.scalers_list.append(scaler_instance)
+
+    def transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
+        """Apply the transform methods from the scaler objects
+        iteratively to the time serie df.
+        Arguments:
+        - gen_df: df with one column value and a datetime index"""
+
+        # Check if the pipeline was fitted
+        if not len(self.scalers_list):
+            raise NotFittedError(self.error_message)
+
+        # Copy the gen_df
+        gen_df_transformed = gen_df.copy(deep = True)
+
+        # Iterate over the scalers_list
+        for scaler_instance in self.scalers_list:
+            # For each scaler instance, call the transform method
+            gen_df_transformed = scaler_instance.transform(gen_df_transformed)
+
+        return gen_df_transformed
+
+    def inverse_transform(self, gen_df: pd.DataFrame) -> pd.DataFrame:
+        """Apply the inverse_transform methods from the scaler objects
+        iteratively to the time serie df.
+        Arguments:
+        - gen_df: df with one column value and a datetime index"""
+
+        # Check if the pipeline was fitted
+        if not len(self.scalers_list):
+            raise NotFittedError(self.error_message)
+
+        # Copy the gen_df
+        gen_df_inverse_transformed = gen_df.copy(deep = True)
+
+        # Iterate over the inverted scalers_list to apply back the
+        # inverse transformation corresponding to the right transformation
+        for scaler_instance in self.scalers_list[::-1]:
+            # Call the inverse_transform method for each scaler instance
+            gen_df_inverse_transformed = scaler_instance.inverse_transform(gen_df_inverse_transformed)
+
+        return gen_df_inverse_transformed
