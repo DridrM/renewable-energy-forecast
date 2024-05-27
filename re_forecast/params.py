@@ -175,3 +175,17 @@ DATA_QUALITY_THRESHOLDS = {"row_nb": (1000, "check_nb_row", "Unsufficient number
 
 # Columns to keep for the peeled_df function
 PEELED_DF_KEEPED_COLUMNS = {"dt_column": "start_date_complete", "value_column": "value"}
+
+
+#################################
+# Preprocessing preprocess data #
+#################################
+
+# Name of the value column of the time serie df
+VALUE_COL_NAME = "value"
+
+# Minimum and maximum bound values for the time serie df
+MIN_MAX_BOUND_VALUES = {"min_value": 0, "max_value": None}
+
+# Parameters of the KNN imputation of missing values
+KNN_IMPUTATION_MISSING_VALUES = {"min_value": 0, "max_value": None}
