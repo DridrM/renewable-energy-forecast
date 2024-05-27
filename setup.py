@@ -11,7 +11,7 @@ requirements = [l.strip() for l in content]
 
 # Setup our package
 setup(name = "re_forecast",
-      version = "0.0",
+      version = "0.5",
       description = "Predict renewable energy production",
       packages = find_packages(),
       install_requires = requirements)

@@ -75,9 +75,9 @@ METADATA_ENERGY_PRODUCTION_FIELDS = {1: 'creation_date',
 DATA_CSV_METEO_PATH = os.environ.get("DATA_CSV_METEO_PATH")
 
 
-################
-# Utils module #
-################
+#####################
+# Data utils module #
+#####################
 
 # 1/ Parameters for the functions used in the load_data module
 
@@ -98,7 +98,7 @@ FORMAT_DATE_DATETIME_DELIMITERS = {0: {"date_time": "T", "tz": "+01:00"},
                                    2: {"date_time": " ", "tz": ""}}
 
 # Maximal number of days depending on the ressource requested
-RESSOURCES_MAXIMAL_TIME_DELTAS = {1: 155, 2: 7, 3: 14}, # According to RTE API doc
+RESSOURCES_MAXIMAL_TIME_DELTAS = {1: 155, 2: 7, 3: 14} # According to RTE API doc
 
 # Time span of one data point depending on the ressource call
 RESSOURCES_DATA_POINT_TIME_SPAN = {1: datetime.timedelta(hours = 1),
@@ -135,7 +135,57 @@ PARAMS_COLS_INIT = {"start_date": None,
 # 3/ Parameters for the functions used in the get_data module
 
 # Minimal intervals between two consecutive API calls depending on the ressource requested
-RESSOURCES_MINIMAL_CALL_INTERVALS = {1: 900, 2: 3600, 3: 900}
+RESSOURCES_MINIMAL_CALL_INTERVALS = {1: 900, 2: 900, 3: 900}
 
-# Ressource key used in the api_delay decorator to adapt wait time depending on the ressource
+# Ressource key, start date key and end date key
+# used in the api_delay decorator to adapt wait time depending on the ressource
 RESSOURCE_PARAM_NAME = "ressource_nb"
+START_DATE_PARAM_NAME = "start_date"
+END_DATE_PARAM_NAME = "end_date"
+
+# Name of the function get rte data, to use in the api_delay decorator
+FUNC_NAME_GET_RTE_DATA = "get_rte_data"
+
+# State of the bypass for the api_delay function. If False, the delay is applied. If false, it is not applied
+API_DELAY_BYPASS = True
+
+
+#############################
+# Preprocessing all modules #
+#############################
+
+# Names of the datetime columns to evauate
+DATE_TIME_COLUMNS = ["start_date", "end_date", "updated_date"]
+
+
+###########################################
+# Preprocessing Check data quality module #
+###########################################
+
+# Quality thresholds that the time serie dataset must respects, the name of their check function
+# and their message (why they don't respect the quality check)
+DATA_QUALITY_THRESHOLDS = {"row_nb": (1000, "check_nb_row", "Unsufficient number of rows"),
+                           "prop_missing_values": (0.3, "check_missing_values_prop", "Too many missing values in proportion"),
+                           "max_empty_gap_duration": (50, "check_max_empty_gap_duration", "Max empty values gap duration above 50 hours")}
+
+
+##############################
+# Preprocessing Clean values #
+##############################
+
+# Columns to keep for the peeled_df function
+PEELED_DF_KEEPED_COLUMNS = {"dt_column": "start_date_complete", "value_column": "value"}
+
+
+#################################
+# Preprocessing preprocess data #
+#################################
+
+# Name of the value column of the time serie df
+VALUE_COL_NAME = "value"
+
+# Minimum and maximum bound values for the time serie df
+MIN_MAX_BOUND_VALUES = {"min_value": 0, "max_value": None}
+
+# Parameters of the KNN imputation of missing values
+KNN_IMPUTATION_MISSING_VALUES = {"min_value": 0, "max_value": None}

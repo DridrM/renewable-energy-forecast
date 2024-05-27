@@ -1,11 +1,14 @@
 import datetime
 import time
 import pandas as pd
+import importlib
 
+# from re_forecast.data.manage_data_storage import gen_file_exists
 from re_forecast.params import (API_START_DATE_LIMITS, API_END_DATE_LIMIT, INPUT_DATETIME_FORMAT, FORMAT_DATE_DATETIME_DELIMITERS,
                                 RESSOURCES_MAXIMAL_TIME_DELTAS, RESSOURCES_DATA_POINT_TIME_SPAN, RESSOURCES_NAMES,
                                 UNITS_NAMES_FILE_PATH_DESIGNATION, UNITS_NAMES_COLS, DEFAULT_END_DATE, PARAMS_COLS_INIT,
-                                RESSOURCES_MINIMAL_CALL_INTERVALS, RESSOURCE_PARAM_NAME)
+                                RESSOURCES_MINIMAL_CALL_INTERVALS, RESSOURCE_PARAM_NAME, START_DATE_PARAM_NAME, END_DATE_PARAM_NAME,
+                                FUNC_NAME_GET_RTE_DATA)
 
 ####################################################
 # API calls function: params handling for API call #
@@ -453,6 +456,9 @@ def handle_params_storage(ressource_nb: int,
 def api_delay(func,
               minimal_call_timedeltas = RESSOURCES_MINIMAL_CALL_INTERVALS,
               ressource_key = RESSOURCE_PARAM_NAME,
+              start_date_key = START_DATE_PARAM_NAME,
+              end_date_key = END_DATE_PARAM_NAME,
+              get_rte_data_func_name = FUNC_NAME_GET_RTE_DATA,
               calls = list()
               ):
     """Decorator that block the execution of a API related function
@@ -461,29 +467,61 @@ def api_delay(func,
         """The wrapper return the function when two consecutive function call
         are more than x seconds appart, with x a defined timedelta"""
 
-        # We append the call time to calls list
-        calls.append(time.time())
+        # Import the manage_data_storage module with importlib to avoid circular
+        # import error
+        mdt = importlib.import_module("re_forecast.data.manage_data_storage")
 
-        # Set the right minimal timedelta depending on the ressource
+        # Extract the ressource number for get_units_names and get_rte_data functions
         ressource = kwargs[ressource_key]
-        minimal_call_timedelta = minimal_call_timedeltas[ressource]
 
-        # The function is return at the first call
-        if len(calls) <= 1:
+        # Extract the start date and the end date for the get_rte_data function
+        # and compute the state of the bypass for the get_rte_data function
+        if func.__name__ == get_rte_data_func_name:
+            start_date = kwargs[start_date_key]
+            end_date = kwargs[end_date_key]
 
-            return func(**kwargs)
+            # Compute the state of the bypass based on the existence of the file
+            bypass = mdt.gen_file_exists(ressource,
+                                         start_date,
+                                         end_date,
+                                         None,
+                                         None,
+                                         None)
 
-        # The function is not return when the timedelta between two following
-        # calls is less than the minimal timedelta. An error message is printed.
-        elif calls[-1] - calls[-2] < minimal_call_timedelta:
-            print(f"You cannot make two following {func.__name__} calls less than {minimal_call_timedelta}s appart.")
-
-            return
-
-        # In all other cases, the function is returned.
+        # If the function wrapped is not the get_rte_data units names function,
+        # then it's the get_rte_units_names function, and we use the
+        # units_names_file_exists function
         else:
+            bypass = mdt.units_names_file_exists(ressource)
 
-            return func(**kwargs)
+        # Apply the bypass state
+        match bypass:
+            # If false, the api_delay is applied
+            case False:
+                # We append the call time to calls list
+                calls.append(time.time())
+
+                # Set the right minimal timedelta depending on the ressource
+                minimal_call_timedelta = minimal_call_timedeltas[ressource]
+
+                # The function is return at the first call
+                if len(calls) <= 1:
+                    return func(**kwargs)
+
+                # The function is not return when the timedelta between two following
+                # calls is less than the minimal timedelta. An error message is printed.
+                elif calls[-1] - calls[-2] < minimal_call_timedelta:
+                    print(f"You cannot make two following {func.__name__} calls less than {minimal_call_timedelta}s appart.")
+
+                    return
+
+                # In all other cases, the function is returned.
+                else:
+                    return func(**kwargs)
+
+            # If the bypass is set to true, there is no delay. It is useful when the data is already downloaded.
+            case True:
+                return func(**kwargs)
 
     return wrapper
 
@@ -501,6 +539,7 @@ def call_delay(ressource_nb: int,
     time.sleep(call_delay)
 
 
+# Note: Unused function for now
 def slice_df(df: pd.DataFrame,
              ressource_nb: int,
              row_rules = {1: 0,

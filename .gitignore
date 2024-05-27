@@ -5,6 +5,7 @@
 __pycache__
 *checkpoint.ipynb
 *.ipynb_checkpoints
+/notebooks/data/*.ipynb
 
 # inteliJ #
 .idea
