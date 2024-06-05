@@ -188,4 +188,15 @@ VALUE_COL_NAME = "value"
 MIN_MAX_BOUND_VALUES = {"min_value": 0, "max_value": None}
 
 # Parameters of the KNN imputation of missing values
-KNN_IMPUTATION_MISSING_VALUES = {"min_value": 0, "max_value": None}
+KNN_IMPUTATION_MISSING_VALUES = {"param": 5, "nb_supervised_features": 24}
+
+
+####################################
+# Training train test split module #
+####################################
+
+# Names of the split values arguments
+SPLIT_VALUES_ARGS_NAMES = ("train_split", "test_split")
+
+# Bound values for the train test split proportions
+TRAIN_TEST_SPLIT_PROP_BOUNDS = (0, 1)
