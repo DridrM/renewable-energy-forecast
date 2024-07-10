@@ -4,6 +4,7 @@ from statsmodels.tsa.arima.model import ARIMA
 
 from re_forecast.training.train_test_split import train_test_split_time_serie
 
+
 def rolling_arima_model(gen_df: pd.DataFrame,
                         arima_order: tuple,
                         forecast_window: int,
