@@ -132,3 +132,37 @@ def plot_rolling_forecast_arima(gen_df: pd.DataFrame,
     plt.title('Forecast vs Actuals')
     plt.legend(loc = 'upper left', fontsize = 10)
     plt.show()
+
+
+def plot_residuals_test_arima_rolling(gen_df: pd.DataFrame,
+                                      arima_order: tuple,
+                                      forecast_window: int,
+                                      initial_train_split: float = 0.7,
+                                      figsize: tuple = (16, 9)) -> None:
+    """Execute a rolling forecast of an ARIMA model, and plot the residuals
+    compared to the test set.
+    Arguments:
+    - gen_df: the time serie data we use to train and forecast
+    - arima_order: a tuple containing the auto-regresive, derivative and moving average parameters for ARIMA.
+    - forecast_window: the size of the forecast time span given in number of rows
+    Parameters:
+    - initial_train_split: the initial train-test split proportion
+    - figsize: size of the matplotlib fig"""
+
+    # Train-test split according the initial train-test split
+    _, test_set = train_test_split_time_serie(gen_df,
+                                                      train_split = initial_train_split)
+
+    # Compute the rolling forecast
+    rolling_forecast_results, _ = rolling_arima_model(gen_df,
+                                                      arima_order = arima_order,
+                                                      forecast_window = forecast_window,
+                                                      initial_train_split = initial_train_split)
+
+    # compute the residuals
+    residuals = test_set.iloc[:, 0] - rolling_forecast_results
+
+    # Plot the residuals and their density
+    fig, ax = plt.subplots(1, 2, figsize = figsize)
+    residuals.plot(title = "Residuals", ax = ax[0])
+    residuals.plot(kind = 'kde', title = 'Density', ax = ax[1])
